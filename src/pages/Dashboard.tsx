@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useSettings, useStockPurchases, useRevenuePayouts, useExpenses, useSalesRecords, useTransactions, computeReport, fmt } from "@/hooks/useFinance";
 import { MetricCard } from "@/components/MetricCard";
-import { Wallet, TrendingUp, Receipt, LineChart as LineIcon } from "lucide-react";
+import { Wallet, TrendingUp, Receipt, LineChart as LineIcon, Banknote, Truck, Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, LineChart, Line } from "recharts";
 
@@ -29,7 +29,7 @@ export default function Dashboard() {
   const monthly = useMemo(() => {
     const map = new Map<string, { month: string; revenue: number; expenses: number; profit: number }>();
     const get = (k: string) => map.get(k) ?? { month: k, revenue: 0, expenses: 0, profit: 0 };
-    revenue.forEach((r) => { const k = r.date.slice(0, 7); const v = get(k); v.revenue += Number(r.received_amount); map.set(k, v); });
+    revenue.forEach((r) => { const k = r.date.slice(0, 7); const v = get(k); v.revenue += Number(r.earned_amount); map.set(k, v); });
     expenses.forEach((e) => { const k = e.date.slice(0, 7); const v = get(k); v.expenses += Number(e.amount); map.set(k, v); });
     const arr = Array.from(map.values()).sort((a, b) => a.month.localeCompare(b.month));
     arr.forEach((v) => v.profit = v.revenue - v.expenses);
@@ -46,9 +46,16 @@ export default function Dashboard() {
       </div>
 
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <MetricCard label="Total Revenue (Earned)" value={fmt(report.revenue)} icon={<TrendingUp className="h-4 w-4" />} />
+        <MetricCard label="Total Cash Received" value={fmt(report.cashReceived)} icon={<Banknote className="h-4 w-4" />} />
+        <MetricCard label="Shipping Wallet Balance" value={fmt(report.walletBalance)} hint="Held by shipping company" icon={<Truck className="h-4 w-4" />} />
+        <MetricCard label="Pending Revenue" value={fmt(report.walletPeriod)} hint="Earned − Received (period)" icon={<Clock className="h-4 w-4" />} />
+      </div>
+
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <MetricCard label="Cash Balance" value={fmt(report.cash)} numeric={report.cash} tone="auto" icon={<Wallet className="h-4 w-4" />} />
-        <MetricCard label="Total Revenue" value={fmt(report.revenue)} icon={<TrendingUp className="h-4 w-4" />} />
         <MetricCard label="Total Expenses" value={fmt(report.expenses)} icon={<Receipt className="h-4 w-4" />} />
+        <MetricCard label="Gross Profit" value={fmt(report.grossProfit)} numeric={report.grossProfit} tone="auto" icon={<LineIcon className="h-4 w-4" />} />
         <MetricCard label="Net Profit" value={fmt(report.netProfit)} numeric={report.netProfit} tone="auto" icon={<LineIcon className="h-4 w-4" />} />
       </div>
 
