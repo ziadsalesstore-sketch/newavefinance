@@ -1,11 +1,13 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useStockPurchases, useStockPurchaseItems, useProducts, fmt } from "@/hooks/useFinance";
 import { PageHeader } from "@/components/PageHeader";
 import { MultiItemForm } from "@/components/MultiItemForm";
-import { DataTable } from "@/components/DataTable";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function StockPage() {
   const { data: rows = [] } = useStockPurchases();
@@ -13,6 +15,17 @@ export default function StockPage() {
   const { data: products = [] } = useProducts();
   const productMap = new Map(products.map((p) => [p.id, p.name]));
   const [openId, setOpenId] = useState<string | null>(null);
+  const qc = useQueryClient();
+
+  const del = async (id: string) => {
+    if (!confirm("Delete this purchase and all its items?")) return;
+    const { error } = await supabase.from("stock_purchases").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Deleted");
+    qc.invalidateQueries({ queryKey: ["stock"] });
+    qc.invalidateQueries({ queryKey: ["stock_items"] });
+    qc.invalidateQueries({ queryKey: ["transactions"] });
+  };
 
   return (
     <div>
@@ -34,19 +47,20 @@ export default function StockPage() {
           const open = openId === r.id;
           return (
             <div key={r.id} className="border-b last:border-0">
-              <button onClick={() => setOpenId(open ? null : r.id)} className="w-full flex items-center justify-between p-4 hover:bg-muted/30 text-left">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between p-4 hover:bg-muted/30">
+                <button onClick={() => setOpenId(open ? null : r.id)} className="flex items-center gap-3 flex-1 text-left">
                   {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                   <div>
                     <div className="font-medium text-sm">{r.date}</div>
                     <div className="text-xs text-muted-foreground">{r.product_name || `${lines.length} item${lines.length === 1 ? "" : "s"}`}</div>
                   </div>
-                </div>
+                </button>
                 <div className="flex items-center gap-6 text-sm">
                   <div className="tabular-nums text-muted-foreground">{Number(r.quantity).toLocaleString()} units</div>
-                  <div className="tabular-nums font-semibold">{fmt(Number(r.total_cost))}</div>
+                  <div className="tabular-nums font-semibold w-28 text-right">{fmt(Number(r.total_cost))}</div>
+                  <Button size="icon" variant="ghost" onClick={() => del(r.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </div>
-              </button>
+              </div>
               {open && (
                 <div className="bg-muted/20 px-12 py-3 space-y-1">
                   {lines.map((it) => (
@@ -54,7 +68,7 @@ export default function StockPage() {
                       <span>{productMap.get(it.product_id) ?? "—"}</span>
                       <div className="flex gap-6 tabular-nums">
                         <span className="text-muted-foreground">{Number(it.quantity)} × {fmt(Number(it.total_cost) / Number(it.quantity))}</span>
-                        <span className="font-medium w-24 text-right">{fmt(Number(it.total_cost))}</span>
+                        <span className="font-medium w-28 text-right">{fmt(Number(it.total_cost))}</span>
                       </div>
                     </div>
                   ))}
@@ -65,19 +79,6 @@ export default function StockPage() {
           );
         })}
       </Card>
-
-      <div className="mt-2 text-xs text-muted-foreground">Tip: click a row to expand line items.</div>
-
-      {/* Hidden DataTable preserved for delete via cascade if needed in future */}
-      <div className="hidden"><DataTable rows={rows} table="stock_purchases" invalidate={["stock", "stock_items", "transactions"]} columns={[{ key: "date", label: "Date" }]} /></div>
-      <div className="mt-4">
-        <DeleteRow rows={rows} />
-      </div>
     </div>
   );
-}
-
-function DeleteRow({ rows }: { rows: { id: string; date: string }[] }) {
-  // simple inline delete UI
-  return null;
 }
