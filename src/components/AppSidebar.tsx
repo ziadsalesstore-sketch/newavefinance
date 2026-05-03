@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, ArrowLeftRight, Package, TrendingUp, Receipt, BarChart3, FileText, Settings as SettingsIcon, Wallet, LogOut, Boxes } from "lucide-react";
+import { LayoutDashboard, ArrowLeftRight, Package, TrendingUp, Receipt, BarChart3, FileText, Settings as SettingsIcon, LogOut, Boxes } from "lucide-react";
+import logo from "@/assets/logo.jpg";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -25,12 +26,12 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 shrink-0 rounded-lg grid place-items-center" style={{ background: "var(--gradient-primary)" }}>
-            <Wallet className="h-5 w-5 text-primary-foreground" />
+          <div className="h-9 w-9 shrink-0 rounded-lg grid place-items-center bg-white overflow-hidden">
+            <img src={logo} alt="Newave Finance logo" className="h-full w-full object-contain" />
           </div>
           {!collapsed && (
             <div>
-              <div className="font-bold text-sidebar-foreground">FinanceOS</div>
+              <div className="font-bold text-sidebar-foreground">Newave Finance</div>
               <div className="text-[10px] text-sidebar-foreground/60 truncate max-w-[140px]">{user?.email}</div>
             </div>
           )}

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Wallet } from "lucide-react";
+import logo from "@/assets/logo.jpg";
 
 export default function Auth() {
   const { user, loading } = useAuth();
@@ -46,11 +46,11 @@ export default function Auth() {
     <main className="min-h-screen grid place-items-center p-4 bg-background">
       <Card className="w-full max-w-md p-8 shadow-[var(--shadow-elevated)]">
         <div className="flex items-center gap-3 mb-6">
-          <div className="h-10 w-10 rounded-xl grid place-items-center" style={{ background: "var(--gradient-primary)" }}>
-            <Wallet className="h-5 w-5 text-primary-foreground" />
+          <div className="h-10 w-10 rounded-xl grid place-items-center bg-white overflow-hidden">
+            <img src={logo} alt="Newave Finance logo" className="h-full w-full object-contain" />
           </div>
           <div>
-            <h1 className="text-xl font-bold">FinanceOS</h1>
+            <h1 className="text-xl font-bold">Newave Finance</h1>
             <p className="text-xs text-muted-foreground">Your business finance brain</p>
           </div>
         </div>
