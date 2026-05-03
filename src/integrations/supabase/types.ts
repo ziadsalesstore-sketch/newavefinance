@@ -44,6 +44,33 @@ export type Database = {
         }
         Relationships: []
       }
+      products: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          name: string
+          sku: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          sku?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          sku?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -64,6 +91,48 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      revenue_payout_items: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          revenue_payout_id: string
+          units_sold: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          revenue_payout_id: string
+          units_sold: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          revenue_payout_id?: string
+          units_sold?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revenue_payout_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "revenue_payout_items_revenue_payout_id_fkey"
+            columns: ["revenue_payout_id"]
+            isOneToOne: false
+            referencedRelation: "revenue_payouts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       revenue_payouts: {
         Row: {
@@ -100,6 +169,48 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      sales_items: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          sales_record_id: string
+          units_sold: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          sales_record_id: string
+          units_sold: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          sales_record_id?: string
+          units_sold?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_items_sales_record_id_fkey"
+            columns: ["sales_record_id"]
+            isOneToOne: false
+            referencedRelation: "sales_records"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sales_records: {
         Row: {
@@ -155,15 +266,60 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_purchase_items: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          quantity: number
+          stock_purchase_id: string
+          total_cost: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          quantity: number
+          stock_purchase_id: string
+          total_cost: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          quantity?: number
+          stock_purchase_id?: string
+          total_cost?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_purchase_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_purchase_items_stock_purchase_id_fkey"
+            columns: ["stock_purchase_id"]
+            isOneToOne: false
+            referencedRelation: "stock_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_purchases: {
         Row: {
           created_at: string
           date: string
           id: string
           notes: string | null
-          product_name: string
-          quantity: number
-          total_cost: number
+          product_name: string | null
+          quantity: number | null
+          total_cost: number | null
           user_id: string
         }
         Insert: {
@@ -171,9 +327,9 @@ export type Database = {
           date?: string
           id?: string
           notes?: string | null
-          product_name: string
-          quantity: number
-          total_cost: number
+          product_name?: string | null
+          quantity?: number | null
+          total_cost?: number | null
           user_id: string
         }
         Update: {
@@ -181,9 +337,9 @@ export type Database = {
           date?: string
           id?: string
           notes?: string | null
-          product_name?: string
-          quantity?: number
-          total_cost?: number
+          product_name?: string | null
+          quantity?: number | null
+          total_cost?: number | null
           user_id?: string
         }
         Relationships: []

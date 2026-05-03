@@ -8,6 +8,7 @@ import AppLayout from "@/components/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import TransactionsPage from "./pages/TransactionsPage";
 import StockPage from "./pages/StockPage";
+import ProductsPage from "./pages/ProductsPage";
 import RevenuePage from "./pages/RevenuePage";
 import ExpensesPage from "./pages/ExpensesPage";
 import SalesPage from "./pages/SalesPage";
@@ -30,6 +31,7 @@ const App = () => (
             <Route element={<AppLayout />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/transactions" element={<TransactionsPage />} />
+              <Route path="/products" element={<ProductsPage />} />
               <Route path="/stock" element={<StockPage />} />
               <Route path="/revenue" element={<RevenuePage />} />
               <Route path="/expenses" element={<ExpensesPage />} />

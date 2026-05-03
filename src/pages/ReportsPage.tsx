@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
-import { useSettings, useStockPurchases, useRevenuePayouts, useExpenses, useSalesRecords, computeReport, fmt } from "@/hooks/useFinance";
+import { useSettings, useStockPurchases, useRevenuePayouts, useExpenses, useSalesRecords, useStockPurchaseItems, useSalesItems, useRevenueItems, useProducts, computeReport, fmt } from "@/hooks/useFinance";
 import { DateRange } from "@/components/DateRange";
 import { Card } from "@/components/ui/card";
 import { MetricCard } from "@/components/MetricCard";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default function ReportsPage() {
   const { data: settings } = useSettings();
@@ -10,13 +11,17 @@ export default function ReportsPage() {
   const { data: revenue = [] } = useRevenuePayouts();
   const { data: expenses = [] } = useExpenses();
   const { data: sales = [] } = useSalesRecords();
+  const { data: stockItems = [] } = useStockPurchaseItems();
+  const { data: salesItems = [] } = useSalesItems();
+  const { data: revenueItems = [] } = useRevenueItems();
+  const { data: products = [] } = useProducts();
 
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
 
   const r = useMemo(
-    () => settings ? computeReport({ settings, stock, revenue, expenses, sales, start: start || undefined, end: end || undefined }) : null,
-    [settings, stock, revenue, expenses, sales, start, end]
+    () => settings ? computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, start: start || undefined, end: end || undefined }) : null,
+    [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, start, end]
   );
   if (!r) return null;
 
@@ -31,14 +36,14 @@ export default function ReportsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Reports</h1>
-        <p className="text-sm text-muted-foreground">Income statement, cash flow, and margins for any period</p>
+        <p className="text-sm text-muted-foreground">Income statement, cash flow, and per-product breakdowns</p>
       </div>
       <DateRange start={start} end={end} onChange={(s, e) => { setStart(s); setEnd(e); }} />
 
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <MetricCard label="Revenue (Earned)" value={fmt(r.revenue)} />
         <MetricCard label="Cash Received" value={fmt(r.cashReceived)} hint={`Wallet: ${fmt(r.walletPeriod)}`} />
-        <MetricCard label="COGS" value={fmt(r.cogs)} hint={`${r.unitsSold} units × ${fmt(r.avgCostPerUnit)}`} />
+        <MetricCard label="COGS" value={fmt(r.cogs)} hint={`${r.unitsSold} units sold`} />
         <MetricCard label="Net Profit" value={fmt(r.netProfit)} numeric={r.netProfit} tone="auto" hint={`${r.netMargin.toFixed(1)}% margin`} />
       </div>
 
@@ -65,6 +70,41 @@ export default function ReportsPage() {
           </div>
         </Card>
       </div>
+
+      <Card className="p-6">
+        <h3 className="font-semibold mb-3">Per-Product Breakdown</h3>
+        {r.breakdown.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No product activity in this period.</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product</TableHead>
+                <TableHead className="text-right">Units Purchased</TableHead>
+                <TableHead className="text-right">Avg Cost</TableHead>
+                <TableHead className="text-right">Units Sold</TableHead>
+                <TableHead className="text-right">COGS</TableHead>
+                <TableHead className="text-right">Inventory Left</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {r.breakdown.map((p) => {
+                const left = p.unitsPurchased - p.unitsSold;
+                return (
+                  <TableRow key={p.productId}>
+                    <TableCell className="font-medium">{p.productName}</TableCell>
+                    <TableCell className="text-right tabular-nums">{p.unitsPurchased}</TableCell>
+                    <TableCell className="text-right tabular-nums">{fmt(p.avgCost)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{p.unitsSold}</TableCell>
+                    <TableCell className="text-right tabular-nums">{fmt(p.cogs)}</TableCell>
+                    <TableCell className={`text-right tabular-nums ${left < 0 ? "text-destructive" : ""}`}>{left}</TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
+      </Card>
     </div>
   );
 }
