@@ -2,8 +2,7 @@ import { useExpenses, fmt } from "@/hooks/useFinance";
 import { PageHeader } from "@/components/PageHeader";
 import { EntityForm } from "@/components/EntityForm";
 import { DataTable } from "@/components/DataTable";
-
-const CATEGORIES = ["Ads", "Shipping", "Software", "Salaries", "Rent", "Utilities", "Fees", "Other"];
+import { CategorySelect } from "@/components/CategorySelect";
 
 export default function ExpensesPage() {
   const { data: rows = [] } = useExpenses();
@@ -15,7 +14,12 @@ export default function ExpensesPage() {
           invalidate={["expenses", "transactions"]}
           fields={[
             { name: "date", label: "Date", type: "date" },
-            { name: "category", label: "Category", type: "select", options: CATEGORIES.map((c) => ({ value: c, label: c })) },
+            {
+              name: "category",
+              label: "Category",
+              type: "custom",
+              render: (value, onChange) => <CategorySelect value={value ?? ""} onChange={onChange} />,
+            },
             { name: "amount", label: "Amount", type: "number" },
             { name: "notes", label: "Notes", type: "textarea" },
           ]}

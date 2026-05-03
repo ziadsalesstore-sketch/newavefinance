@@ -14,7 +14,8 @@ const today = () => new Date().toISOString().slice(0, 10);
 type FieldDef =
   | { name: string; label: string; type: "date" | "number" | "text" }
   | { name: string; label: string; type: "textarea" }
-  | { name: string; label: string; type: "select"; options: { value: string; label: string }[] };
+  | { name: string; label: string; type: "select"; options: { value: string; label: string }[] }
+  | { name: string; label: string; type: "custom"; render: (value: any, onChange: (v: any) => void) => React.ReactNode };
 
 export function EntityForm({
   table, fields, invalidate, defaults, onDone,
@@ -67,6 +68,8 @@ export function EntityForm({
                 {f.options.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
               </SelectContent>
             </Select>
+          ) : f.type === "custom" ? (
+            f.render(form[f.name], (v) => setForm({ ...form, [f.name]: v }))
           ) : (
             <Input id={f.name} type={f.type} value={form[f.name] ?? ""} onChange={(e) => setForm({ ...form, [f.name]: e.target.value })} required={f.type !== "text" || f.name === "product_name" || f.name === "category"} />
           )}
