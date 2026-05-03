@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Wallet } from "lucide-react";
+import logo from "@/assets/logo.jpg";
 
 export default function Auth() {
   const { user, loading } = useAuth();
