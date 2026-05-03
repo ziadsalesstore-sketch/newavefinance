@@ -36,9 +36,9 @@ export default function ReportsPage() {
       <DateRange start={start} end={end} onChange={(s, e) => { setStart(s); setEnd(e); }} />
 
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="Revenue" value={fmt(r.revenue)} />
+        <MetricCard label="Revenue (Earned)" value={fmt(r.revenue)} />
+        <MetricCard label="Cash Received" value={fmt(r.cashReceived)} hint={`Wallet: ${fmt(r.walletPeriod)}`} />
         <MetricCard label="COGS" value={fmt(r.cogs)} hint={`${r.unitsSold} units × ${fmt(r.avgCostPerUnit)}`} />
-        <MetricCard label="Gross Profit" value={fmt(r.grossProfit)} numeric={r.grossProfit} tone="auto" hint={`${r.grossMargin.toFixed(1)}% margin`} />
         <MetricCard label="Net Profit" value={fmt(r.netProfit)} numeric={r.netProfit} tone="auto" hint={`${r.netMargin.toFixed(1)}% margin`} />
       </div>
 
@@ -54,9 +54,10 @@ export default function ReportsPage() {
 
         <Card className="p-6">
           <h3 className="font-semibold mb-3">Cash Flow Summary</h3>
-          <Row label="Inflows (Revenue)" value={fmt(r.inflows)} />
+          <Row label="Inflows (Cash Received)" value={fmt(r.inflows)} />
           <Row label="Outflows (Expenses + Stock)" value={`(${fmt(r.outflows)})`} />
           <Row label="Net Cash Flow" value={fmt(r.netCashFlow)} bold tone={r.netCashFlow >= 0 ? "pos" : "neg"} />
+          <Row label="Shipping Wallet Balance (all-time)" value={fmt(r.walletBalance)} />
           <div className="mt-6">
             <h3 className="font-semibold mb-3">Margins</h3>
             <Row label="Gross Margin" value={`${r.grossMargin.toFixed(2)}%`} />
