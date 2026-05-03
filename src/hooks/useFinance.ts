@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type Settings = { user_id: string; starting_cash: number; sales_tracking_mode: "per_payout" | "periodic"; };
 export type StockPurchase = { id: string; date: string; product_name: string; quantity: number; total_cost: number; notes: string | null; };
-export type RevenuePayout = { id: string; date: string; expected_amount: number; received_amount: number; status: string; units_sold: number | null; notes: string | null; };
+export type RevenuePayout = { id: string; date: string; earned_amount: number; received_amount: number; status: string; units_sold: number | null; notes: string | null; };
 export type Expense = { id: string; date: string; category: string; amount: number; notes: string | null; };
 export type SalesRecord = { id: string; start_date: string; end_date: string; units_sold: number; period_type: string; notes: string | null; };
 export type Transaction = { id: string; date: string; type: string; category: string | null; amount: number; notes: string | null; };
@@ -52,7 +52,11 @@ export function computeReport({ settings, stock, revenue, expenses, sales, start
     ? sales.filter((s) => inRange(s.end_date, start, end)).reduce((a, s) => a + Number(s.units_sold), 0)
     : revenue.filter((r) => inRange(r.date, start, end)).reduce((a, r) => a + Number(r.units_sold ?? 0), 0);
 
-  const revenueTotal = revenue.filter((r) => inRange(r.date, start, end)).reduce((a, r) => a + Number(r.received_amount), 0);
+  const periodRev = revenue.filter((r) => inRange(r.date, start, end));
+  // Revenue (business performance) uses EARNED amount
+  const revenueTotal = periodRev.reduce((a, r) => a + Number(r.earned_amount), 0);
+  // Cash received in period
+  const cashReceived = periodRev.reduce((a, r) => a + Number(r.received_amount), 0);
   const expensesTotal = expenses.filter((e) => inRange(e.date, start, end)).reduce((a, e) => a + Number(e.amount), 0);
   const stockOutflow = stock.filter((s) => inRange(s.date, start, end)).reduce((a, s) => a + Number(s.total_cost), 0);
 
@@ -62,16 +66,23 @@ export function computeReport({ settings, stock, revenue, expenses, sales, start
   const grossMargin = revenueTotal > 0 ? (grossProfit / revenueTotal) * 100 : 0;
   const netMargin = revenueTotal > 0 ? (netProfit / revenueTotal) * 100 : 0;
 
-  const allTimeRevenue = revenue.reduce((a, r) => a + Number(r.received_amount), 0);
+  // Wallet balance for the period (earned - received)
+  const walletPeriod = revenueTotal - cashReceived;
+
+  // All-time totals for cash & wallet balance
+  const allTimeEarned = revenue.reduce((a, r) => a + Number(r.earned_amount), 0);
+  const allTimeReceived = revenue.reduce((a, r) => a + Number(r.received_amount), 0);
   const allTimeExpenses = expenses.reduce((a, e) => a + Number(e.amount), 0);
   const allTimeStock = stock.reduce((a, s) => a + Number(s.total_cost), 0);
-  const cash = Number(settings?.starting_cash ?? 0) + allTimeRevenue - allTimeExpenses - allTimeStock;
+  // Cash on hand uses RECEIVED money only
+  const cash = Number(settings?.starting_cash ?? 0) + allTimeReceived - allTimeExpenses - allTimeStock;
+  const walletBalance = allTimeEarned - allTimeReceived;
 
   return {
-    revenue: revenueTotal, expenses: expensesTotal, cogs, grossProfit, netProfit,
+    revenue: revenueTotal, cashReceived, expenses: expensesTotal, cogs, grossProfit, netProfit,
     grossMargin, netMargin, unitsSold, avgCostPerUnit, totalPurchaseCost, totalUnitsPurchased,
-    inflows: revenueTotal, outflows: expensesTotal + stockOutflow, netCashFlow: revenueTotal - expensesTotal - stockOutflow,
-    cash,
+    inflows: cashReceived, outflows: expensesTotal + stockOutflow, netCashFlow: cashReceived - expensesTotal - stockOutflow,
+    cash, walletBalance, walletPeriod, allTimeEarned, allTimeReceived,
   };
 }
 
