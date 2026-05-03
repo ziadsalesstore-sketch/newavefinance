@@ -68,6 +68,8 @@ export function EntityForm({
                 {f.options.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
               </SelectContent>
             </Select>
+          ) : f.type === "custom" ? (
+            f.render(form[f.name], (v) => setForm({ ...form, [f.name]: v }))
           ) : (
             <Input id={f.name} type={f.type} value={form[f.name] ?? ""} onChange={(e) => setForm({ ...form, [f.name]: e.target.value })} required={f.type !== "text" || f.name === "product_name" || f.name === "category"} />
           )}
