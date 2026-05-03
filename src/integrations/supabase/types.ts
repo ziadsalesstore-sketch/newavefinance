@@ -69,7 +69,7 @@ export type Database = {
         Row: {
           created_at: string
           date: string
-          expected_amount: number
+          earned_amount: number
           id: string
           notes: string | null
           received_amount: number
@@ -80,7 +80,7 @@ export type Database = {
         Insert: {
           created_at?: string
           date?: string
-          expected_amount?: number
+          earned_amount?: number
           id?: string
           notes?: string | null
           received_amount?: number
@@ -91,7 +91,7 @@ export type Database = {
         Update: {
           created_at?: string
           date?: string
-          expected_amount?: number
+          earned_amount?: number
           id?: string
           notes?: string | null
           received_amount?: number
