@@ -1,0 +1,1 @@
+ALTER TABLE public.stock_purchases DROP CONSTRAINT stock_purchases_quantity_check; ALTER TABLE public.stock_purchases DROP CONSTRAINT stock_purchases_total_cost_check;
