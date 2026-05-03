@@ -14,7 +14,8 @@ const today = () => new Date().toISOString().slice(0, 10);
 type FieldDef =
   | { name: string; label: string; type: "date" | "number" | "text" }
   | { name: string; label: string; type: "textarea" }
-  | { name: string; label: string; type: "select"; options: { value: string; label: string }[] };
+  | { name: string; label: string; type: "select"; options: { value: string; label: string }[] }
+  | { name: string; label: string; type: "custom"; render: (value: any, onChange: (v: any) => void) => React.ReactNode };
 
 export function EntityForm({
   table, fields, invalidate, defaults, onDone,
