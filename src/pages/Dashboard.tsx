@@ -18,10 +18,11 @@ export default function Dashboard() {
   const { data: salesItems = [] } = useSalesItems();
   const { data: revenueItems = [] } = useRevenueItems();
   const { data: products = [] } = useProducts();
+  const { data: generalReceived = [] } = useGeneralReceivedPayments();
 
   const report = useMemo(
-    () => settings ? computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products }) : null,
-    [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products]
+    () => settings ? computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived }) : null,
+    [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived]
   );
 
   const expensesByCategory = useMemo(() => {
