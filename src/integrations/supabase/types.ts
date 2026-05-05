@@ -113,6 +113,44 @@ export type Database = {
         }
         Relationships: []
       }
+      revenue_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          date: string
+          id: string
+          note: string | null
+          revenue_payout_id: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          date?: string
+          id?: string
+          note?: string | null
+          revenue_payout_id: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          date?: string
+          id?: string
+          note?: string | null
+          revenue_payout_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revenue_payments_revenue_payout_id_fkey"
+            columns: ["revenue_payout_id"]
+            isOneToOne: false
+            referencedRelation: "revenue_payouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       revenue_payout_items: {
         Row: {
           created_at: string
