@@ -34,6 +34,7 @@ export const useRevenuePayouts = () => useQuery({ queryKey: ["revenue"], queryFn
 export const useExpenses = () => useQuery({ queryKey: ["expenses"], queryFn: fetchAll<Expense>("expenses") });
 export const useSalesRecords = () => useQuery({ queryKey: ["sales"], queryFn: fetchAll<SalesRecord>("sales_records", "end_date") });
 export const useTransactions = () => useQuery({ queryKey: ["transactions"], queryFn: fetchAll<Transaction>("transactions") });
+export const useGeneralReceivedPayments = () => useQuery({ queryKey: ["general_received"], queryFn: fetchAll<GeneralReceivedPayment>("general_received_payments") });
 
 export const useStockPurchaseItems = () => useQuery({
   queryKey: ["stock_items"],
