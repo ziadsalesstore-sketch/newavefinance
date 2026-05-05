@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Trash2, Wallet } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -97,7 +97,7 @@ export default function WithdrawalsPage() {
       </div>
 
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 mb-4">
-        <MetricCard label="Total Withdrawn" value={fmt(total)} icon={Wallet} />
+        <MetricCard label="Total Withdrawn" value={fmt(total)} />
         <MetricCard label="Number of Withdrawals" value={String(rows.length)} />
       </div>
 
