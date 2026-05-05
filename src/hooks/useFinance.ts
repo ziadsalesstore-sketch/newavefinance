@@ -138,8 +138,10 @@ export function computeReport({ settings, stock, stockItems, revenue, revenueIte
   const avgCostPerUnit = totalUnitsPurchased > 0 ? totalPurchaseCost / totalUnitsPurchased : 0;
 
   const periodRev = revenue.filter((r) => inRange(r.date, start, end));
+  const periodGeneral = generalReceived.filter((g) => inRange(g.date, start, end));
   const revenueTotal = periodRev.reduce((a, r) => a + Number(r.earned_amount), 0);
-  const cashReceived = periodRev.reduce((a, r) => a + Number(r.received_amount), 0);
+  const cashReceived = periodRev.reduce((a, r) => a + Number(r.received_amount), 0)
+    + periodGeneral.reduce((a, g) => a + Number(g.amount), 0);
   const expensesTotal = expenses.filter((e) => inRange(e.date, start, end)).reduce((a, e) => a + Number(e.amount), 0);
   const stockOutflow = stock.filter((s) => inRange(s.date, start, end)).reduce((a, s) => a + Number(s.total_cost), 0);
 
@@ -151,7 +153,8 @@ export function computeReport({ settings, stock, stockItems, revenue, revenueIte
   const walletPeriod = revenueTotal - cashReceived;
 
   const allTimeEarned = revenue.reduce((a, r) => a + Number(r.earned_amount), 0);
-  const allTimeReceived = revenue.reduce((a, r) => a + Number(r.received_amount), 0);
+  const allTimeReceived = revenue.reduce((a, r) => a + Number(r.received_amount), 0)
+    + generalReceived.reduce((a, g) => a + Number(g.amount), 0);
   const allTimeExpenses = expenses.reduce((a, e) => a + Number(e.amount), 0);
   const allTimeStock = stock.reduce((a, s) => a + Number(s.total_cost), 0);
   const cash = Number(settings?.starting_cash ?? 0) + allTimeReceived - allTimeExpenses - allTimeStock;
