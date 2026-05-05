@@ -62,6 +62,15 @@ export const useRevenueItems = () => useQuery({
   },
 });
 
+export const useRevenuePayments = () => useQuery({
+  queryKey: ["revenue_payments"],
+  queryFn: async (): Promise<RevenuePayment[]> => {
+    const { data, error } = await supabase.from("revenue_payments" as any).select("*").order("date", { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as RevenuePayment[];
+  },
+});
+
 export const inRange = (d: string | undefined, start?: string, end?: string) =>
   !!d && (!start || d >= start) && (!end || d <= end);
 
