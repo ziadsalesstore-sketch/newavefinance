@@ -67,7 +67,7 @@ export const useRevenuePayments = () => useQuery({
   queryFn: async (): Promise<RevenuePayment[]> => {
     const { data, error } = await supabase.from("revenue_payments" as any).select("*").order("date", { ascending: false });
     if (error) throw error;
-    return (data ?? []) as RevenuePayment[];
+    return ((data ?? []) as unknown) as RevenuePayment[];
   },
 });
 
