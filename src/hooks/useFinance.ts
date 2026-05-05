@@ -76,6 +76,7 @@ export type ReportInputs = {
   sales: SalesRecord[];
   salesItems: SalesItem[];
   products: Product[];
+  generalReceived?: GeneralReceivedPayment[];
   start?: string;
   end?: string;
 };
