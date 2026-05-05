@@ -7,6 +7,7 @@ export type StockPurchase = { id: string; date: string; product_name: string | n
 export type StockPurchaseItem = { id: string; stock_purchase_id: string; product_id: string; quantity: number; total_cost: number; date?: string };
 export type RevenuePayout = { id: string; date: string; earned_amount: number; received_amount: number; status: string; units_sold: number | null; notes: string | null; };
 export type RevenuePayoutItem = { id: string; revenue_payout_id: string; product_id: string; units_sold: number; date?: string };
+export type RevenuePayment = { id: string; revenue_payout_id: string; amount: number; date: string; note: string | null; };
 export type Expense = { id: string; date: string; category: string; amount: number; notes: string | null; };
 export type SalesRecord = { id: string; start_date: string; end_date: string; units_sold: number; period_type: string; notes: string | null; };
 export type SalesItem = { id: string; sales_record_id: string; product_id: string; units_sold: number; end_date?: string };
@@ -58,6 +59,15 @@ export const useRevenueItems = () => useQuery({
     const { data, error } = await supabase.from("revenue_payout_items" as any).select("*, revenue_payouts(date)");
     if (error) throw error;
     return (data ?? []).map((r: any) => ({ ...r, date: r.revenue_payouts?.date })) as RevenuePayoutItem[];
+  },
+});
+
+export const useRevenuePayments = () => useQuery({
+  queryKey: ["revenue_payments"],
+  queryFn: async (): Promise<RevenuePayment[]> => {
+    const { data, error } = await supabase.from("revenue_payments" as any).select("*").order("date", { ascending: false });
+    if (error) throw error;
+    return ((data ?? []) as unknown) as RevenuePayment[];
   },
 });
 
