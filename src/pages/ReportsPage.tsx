@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useSettings, useStockPurchases, useRevenuePayouts, useExpenses, useSalesRecords, useStockPurchaseItems, useSalesItems, useRevenueItems, useProducts, computeReport, fmt } from "@/hooks/useFinance";
+import { useSettings, useStockPurchases, useRevenuePayouts, useExpenses, useSalesRecords, useStockPurchaseItems, useSalesItems, useRevenueItems, useProducts, useGeneralReceivedPayments, computeReport, fmt } from "@/hooks/useFinance";
 import { DateRange } from "@/components/DateRange";
 import { Card } from "@/components/ui/card";
 import { MetricCard } from "@/components/MetricCard";
@@ -15,13 +15,14 @@ export default function ReportsPage() {
   const { data: salesItems = [] } = useSalesItems();
   const { data: revenueItems = [] } = useRevenueItems();
   const { data: products = [] } = useProducts();
+  const { data: generalReceived = [] } = useGeneralReceivedPayments();
 
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
 
   const r = useMemo(
-    () => settings ? computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, start: start || undefined, end: end || undefined }) : null,
-    [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, start, end]
+    () => settings ? computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, start: start || undefined, end: end || undefined }) : null,
+    [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, start, end]
   );
   if (!r) return null;
 
