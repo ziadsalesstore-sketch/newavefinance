@@ -1,13 +1,14 @@
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useRevenuePayouts, useRevenueItems, useSettings, useProducts, fmt } from "@/hooks/useFinance";
-import { PageHeader } from "@/components/PageHeader";
+import { useRevenuePayouts, useRevenueItems, useSettings, useProducts, useGeneralReceivedPayments, fmt } from "@/hooks/useFinance";
 import { MultiItemForm } from "@/components/MultiItemForm";
+import { RecordReceivedPaymentForm } from "@/components/RecordReceivedPaymentForm";
 import { MetricCard } from "@/components/MetricCard";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ChevronDown, ChevronRight, Plus, Trash2, Banknote } from "lucide-react";
 import { toast } from "sonner";
 
 export default function RevenuePage() {
@@ -15,40 +16,74 @@ export default function RevenuePage() {
   const { data: items = [] } = useRevenueItems();
   const { data: products = [] } = useProducts();
   const { data: settings } = useSettings();
+  const { data: generalReceived = [] } = useGeneralReceivedPayments();
   const showUnits = settings?.sales_tracking_mode === "per_payout";
   const productMap = new Map(products.map((p) => [p.id, p.name]));
   const [openId, setOpenId] = useState<string | null>(null);
+  const [payoutOpen, setPayoutOpen] = useState(false);
+  const [receivedOpen, setReceivedOpen] = useState(false);
   const qc = useQueryClient();
 
   const totals = useMemo(() => {
     const earned = rows.reduce((a, r) => a + Number(r.earned_amount), 0);
-    const received = rows.reduce((a, r) => a + Number(r.received_amount), 0);
+    const linkedReceived = rows.reduce((a, r) => a + Number(r.received_amount), 0);
+    const generalTotal = generalReceived.reduce((a, g) => a + Number(g.amount), 0);
+    const received = linkedReceived + generalTotal;
     return { earned, received, wallet: earned - received };
-  }, [rows]);
+  }, [rows, generalReceived]);
 
   const del = async (id: string) => {
     if (!confirm("Delete this payout?")) return;
     const { error } = await supabase.from("revenue_payouts").delete().eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Deleted");
-    qc.invalidateQueries({ queryKey: ["revenue"] });
-    qc.invalidateQueries({ queryKey: ["revenue_items"] });
-    qc.invalidateQueries({ queryKey: ["transactions"] });
+    ["revenue", "revenue_items", "transactions"].forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
+  };
+
+  const delGeneral = async (id: string) => {
+    if (!confirm("Delete this received payment?")) return;
+    const { error } = await supabase.from("general_received_payments" as any).delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Deleted");
+    ["general_received", "transactions"].forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
   };
 
   return (
     <div>
-      <PageHeader title="Revenue Payouts" subtitle={`Sales tracking: ${showUnits ? "Per Payout (multi-product)" : "Periodic Records"}`} dialogTitle="New revenue payout">
-        <MultiItemForm mode="payout" />
-      </PageHeader>
+      <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold">Revenue Payouts</h1>
+          <p className="text-sm text-muted-foreground">Sales tracking: {showUnits ? "Per Payout (multi-product)" : "Periodic Records"}</p>
+        </div>
+        <div className="flex gap-2">
+          <Dialog open={receivedOpen} onOpenChange={setReceivedOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline"><Banknote className="h-4 w-4 mr-1" />Record Received Payment</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Record received payment</DialogTitle></DialogHeader>
+              <RecordReceivedPaymentForm onDone={() => setReceivedOpen(false)} />
+            </DialogContent>
+          </Dialog>
+          <Dialog open={payoutOpen} onOpenChange={setPayoutOpen}>
+            <DialogTrigger asChild>
+              <Button><Plus className="h-4 w-4 mr-1" />Add</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>New revenue payout</DialogTitle></DialogHeader>
+              <MultiItemForm mode="payout" />
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
 
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-3 mb-4">
         <MetricCard label="Total Earned" value={fmt(totals.earned)} />
-        <MetricCard label="Total Received" value={fmt(totals.received)} />
+        <MetricCard label="Total Received" value={fmt(totals.received)} hint="Includes standalone received payments" />
         <MetricCard label="Shipping Wallet Balance" value={fmt(totals.wallet)} hint="Held by shipping company" />
       </div>
 
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden mb-6">
         {rows.length === 0 ? (
           <div className="p-8 text-center text-sm text-muted-foreground">No payouts yet.</div>
         ) : rows.map((r) => {
@@ -87,6 +122,27 @@ export default function RevenuePage() {
           );
         })}
       </Card>
+
+      <div>
+        <h2 className="text-lg font-semibold mb-2">Standalone Received Payments</h2>
+        <p className="text-xs text-muted-foreground mb-3">Payments received later (e.g. courier payouts). These reduce pending balance without creating new revenue.</p>
+        <Card className="overflow-hidden">
+          {generalReceived.length === 0 ? (
+            <div className="p-6 text-center text-sm text-muted-foreground">No standalone payments yet.</div>
+          ) : generalReceived.map((g) => (
+            <div key={g.id} className="flex items-center justify-between p-4 border-b last:border-0 hover:bg-muted/30">
+              <div>
+                <div className="font-medium text-sm">{g.date}</div>
+                {g.note && <div className="text-xs text-muted-foreground">{g.note}</div>}
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="tabular-nums font-semibold text-success">{fmt(Number(g.amount))}</div>
+                <Button size="icon" variant="ghost" onClick={() => delGeneral(g.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              </div>
+            </div>
+          ))}
+        </Card>
+      </div>
     </div>
   );
 }
