@@ -121,7 +121,7 @@ export function MultiItemForm({ mode, onDone }: { mode: Mode; onDone?: () => voi
       {mode === "payout" && (
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2"><Label>Earned amount</Label><Input type="number" step="0.01" value={earned} onChange={(e) => setEarned(e.target.value)} required /></div>
-          <div className="space-y-2"><Label>Received amount</Label><Input type="number" step="0.01" value={received} onChange={(e) => setReceived(e.target.value)} required /></div>
+          <div className="space-y-2"><Label>Amount received now (optional)</Label><Input type="number" step="0.01" placeholder="0" value={received} onChange={(e) => setReceived(e.target.value)} /></div>
           <div className="space-y-2 col-span-2">
             <Label>Status</Label>
             <Select value={status} onValueChange={setStatus}>
