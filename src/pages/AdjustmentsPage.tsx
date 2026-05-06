@@ -314,11 +314,14 @@ export default function AdjustmentsPage() {
                 </>
               )}
 
-              <div className="rounded-md bg-muted/40 border px-3 py-2 text-xs text-muted-foreground">
-                Adjustments are used to correct differences, not to record normal transactions.
+                <div className="rounded-md bg-muted/40 border px-3 py-2 text-xs text-muted-foreground">
+                  Adjustments are used to correct differences, not to record normal transactions.
+                </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={busy}>{busy ? "Saving..." : "Save"}</Button>
+              <div className="px-6 py-4 border-t shrink-0 bg-background">
+                <Button type="submit" className="w-full" disabled={busy}>{busy ? "Saving..." : "Save"}</Button>
+              </div>
             </form>
           </DialogContent>
         </Dialog>
