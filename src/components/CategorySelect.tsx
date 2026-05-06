@@ -1,20 +1,20 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectSeparator } from "@/components/ui/select";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Check, ChevronDown, Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 export function CategorySelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const [creating, setCreating] = useState(false);
-  const [name, setName] = useState("");
-  const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [busy, setBusy] = useState(false);
 
   const { data: cats = [] } = useQuery({
     queryKey: ["expense_categories"],
@@ -25,8 +25,19 @@ export function CategorySelect({ value, onChange }: { value: string; onChange: (
     },
   });
 
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return cats;
+    return cats.filter((c: any) => c.name.toLowerCase().includes(q));
+  }, [cats, search]);
+
+  const exactMatch = useMemo(
+    () => cats.some((c: any) => c.name.toLowerCase() === search.trim().toLowerCase()),
+    [cats, search]
+  );
+
   const createCategory = async () => {
-    const trimmed = name.trim();
+    const trimmed = search.trim();
     if (!trimmed || !user) return;
     setBusy(true);
     try {
@@ -38,8 +49,7 @@ export function CategorySelect({ value, onChange }: { value: string; onChange: (
       if (error) throw error;
       await qc.invalidateQueries({ queryKey: ["expense_categories"] });
       onChange(data.name);
-      setName("");
-      setCreating(false);
+      setSearch("");
       setOpen(false);
       toast.success("Category created");
     } catch (e: any) {
@@ -50,38 +60,80 @@ export function CategorySelect({ value, onChange }: { value: string; onChange: (
   };
 
   return (
-    <Select value={value} onValueChange={onChange} open={open} onOpenChange={(o) => { setOpen(o); if (!o) setCreating(false); }}>
-      <SelectTrigger><SelectValue placeholder="Select category..." /></SelectTrigger>
-      <SelectContent>
-        {cats.map((c: any) => (
-          <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
-        ))}
-        {cats.length > 0 && <SelectSeparator />}
-        {creating ? (
-          <div className="p-2 flex gap-2" onPointerDown={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
-            <Input
-              autoFocus
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Category name"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") { e.preventDefault(); createCategory(); }
-                if (e.key === "Escape") { e.preventDefault(); setCreating(false); setName(""); }
-              }}
-              className="h-8"
-            />
-            <Button type="button" size="sm" disabled={busy} onClick={createCategory}>Add</Button>
+    <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setSearch(""); }}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between font-normal"
+        >
+          <span className={cn(!value && "text-muted-foreground")}>
+            {value || "Select category..."}
+          </span>
+          <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="p-0 w-[--radix-popover-trigger-width] max-w-[calc(100vw-2rem)]"
+        align="start"
+        sideOffset={4}
+      >
+        <div className="p-2 border-b">
+          <Input
+            autoFocus
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search or create..."
+            className="h-9"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && search.trim() && !exactMatch) {
+                e.preventDefault();
+                createCategory();
+              }
+            }}
+          />
+        </div>
+        <div className="max-h-[250px] overflow-y-auto py-1">
+          {filtered.length === 0 ? (
+            <div className="px-3 py-6 text-center text-sm text-muted-foreground">
+              No categories found
+            </div>
+          ) : (
+            filtered.map((c: any) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => { onChange(c.name); setOpen(false); setSearch(""); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground text-left"
+              >
+                <Check className={cn("h-4 w-4", value === c.name ? "opacity-100" : "opacity-0")} />
+                <span className="truncate">{c.name}</span>
+              </button>
+            ))
+          )}
+        </div>
+        {search.trim() && !exactMatch && (
+          <div className="border-t p-1 sticky bottom-0 bg-popover">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={createCategory}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground"
+            >
+              <Plus className="h-4 w-4" /> Create "{search.trim()}"
+            </button>
           </div>
-        ) : (
-          <button
-            type="button"
-            className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground"
-            onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); setCreating(true); }}
-          >
-            <Plus className="h-4 w-4" /> Create new category
-          </button>
         )}
-      </SelectContent>
-    </Select>
+        {!search.trim() && (
+          <div className="border-t p-1 sticky bottom-0 bg-popover">
+            <div className="px-3 py-1.5 text-xs text-muted-foreground">
+              Type a name to create a new category
+            </div>
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
   );
 }
