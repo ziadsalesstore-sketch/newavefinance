@@ -1,15 +1,111 @@
-import { useTransactions, fmt } from "@/hooks/useFinance";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useTransactions, fmt, type Transaction } from "@/hooks/useFinance";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+
+// Maps a transaction's source_table to its column names + which fields are editable.
+type SourceConfig = {
+  table: string;
+  amountCol: string | null; // null = amount derived from child items, can't edit directly
+  notesCol: string;
+  dateCol: string;
+};
+
+const SOURCE_MAP: Record<string, SourceConfig> = {
+  expenses: { table: "expenses", amountCol: "amount", notesCol: "notes", dateCol: "date" },
+  revenue_payouts: { table: "revenue_payouts", amountCol: "earned_amount", notesCol: "notes", dateCol: "date" },
+  revenue_payments: { table: "revenue_payments", amountCol: "amount", notesCol: "note", dateCol: "date" },
+  general_received_payments: { table: "general_received_payments", amountCol: "amount", notesCol: "note", dateCol: "date" },
+  personal_withdrawals: { table: "personal_withdrawals", amountCol: "amount", notesCol: "note", dateCol: "date" },
+  opening_balances: { table: "opening_balances", amountCol: "cash_amount", notesCol: "notes", dateCol: "date" },
+  stock_purchases: { table: "stock_purchases", amountCol: null, notesCol: "notes", dateCol: "date" },
+  opening_balance_items: { table: "opening_balance_items", amountCol: null, notesCol: "notes", dateCol: "date" },
+};
+
+const INVALIDATE_KEYS = ["transactions", "stock", "stock_items", "revenue", "revenue_items", "expenses", "sales", "sales_items", "general_received", "opening_balance", "opening_balance_items"];
 
 export default function TransactionsPage() {
   const { data: rows = [] } = useTransactions();
+  const qc = useQueryClient();
+  const [editing, setEditing] = useState<Transaction | null>(null);
+  const [date, setDate] = useState("");
+  const [amount, setAmount] = useState("");
+  const [notes, setNotes] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const invalidateAll = () => INVALIDATE_KEYS.forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
+
+  const openEdit = (t: Transaction) => {
+    setEditing(t);
+    setDate(t.date);
+    setAmount(String(t.amount));
+    setNotes(t.notes ?? "");
+  };
+
+  const sourceFor = (t: Transaction): SourceConfig | null =>
+    t.source_table ? SOURCE_MAP[t.source_table] ?? null : null;
+
+  const remove = async (t: Transaction) => {
+    const cfg = sourceFor(t);
+    if (!cfg || !t.source_id) {
+      // Orphan/manual transaction — delete directly
+      if (!confirm("Delete this transaction?")) return;
+      const { error } = await supabase.from("transactions").delete().eq("id", t.id);
+      if (error) return toast.error(error.message);
+      toast.success("Deleted");
+      invalidateAll();
+      return;
+    }
+    if (!confirm(`Delete this ${t.type.toLowerCase()} entry? This will remove the underlying record.`)) return;
+    const { error } = await supabase.from(cfg.table as any).delete().eq("id", t.source_id);
+    if (error) return toast.error(error.message);
+    toast.success("Deleted");
+    invalidateAll();
+  };
+
+  const save = async () => {
+    if (!editing) return;
+    const cfg = sourceFor(editing);
+    setBusy(true);
+    try {
+      if (!cfg || !editing.source_id) {
+        // Direct edit on transactions row
+        const { error } = await supabase.from("transactions").update({
+          date, amount: Number(amount) || 0, notes: notes || null,
+        }).eq("id", editing.id);
+        if (error) throw error;
+      } else {
+        const patch: any = { [cfg.dateCol]: date, [cfg.notesCol]: notes || null };
+        if (cfg.amountCol) patch[cfg.amountCol] = Number(amount) || 0;
+        const { error } = await supabase.from(cfg.table as any).update(patch).eq("id", editing.source_id);
+        if (error) throw error;
+      }
+      toast.success("Updated");
+      invalidateAll();
+      setEditing(null);
+    } catch (err: any) {
+      toast.error(err.message ?? "Failed");
+    } finally { setBusy(false); }
+  };
+
+  const editingCfg = editing ? sourceFor(editing) : null;
+  const amountEditable = !editing || !editingCfg || editingCfg.amountCol !== null;
+
   return (
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Transactions</h1>
-        <p className="text-sm text-muted-foreground">Auto-generated ledger of all financial activity</p>
+        <p className="text-sm text-muted-foreground">Auto-generated ledger of all financial activity. Edits sync back to the source entry.</p>
       </div>
       <Card className="overflow-hidden">
         <Table>
@@ -20,11 +116,12 @@ export default function TransactionsPage() {
               <TableHead>Category</TableHead>
               <TableHead>Notes</TableHead>
               <TableHead className="text-right">Amount</TableHead>
+              <TableHead className="w-24 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows.map((t) => {
-              const negative = t.type === "Expense" || t.type === "Stock Purchase";
+              const negative = t.type === "Expense" || t.type === "Stock Purchase" || t.type === "Personal Withdrawal";
               return (
                 <TableRow key={t.id}>
                   <TableCell>{t.date}</TableCell>
@@ -38,15 +135,38 @@ export default function TransactionsPage() {
                   <TableCell className={`text-right tabular-nums font-medium ${negative ? "text-destructive" : "text-success"}`}>
                     {negative ? "-" : "+"}{fmt(Number(t.amount))}
                   </TableCell>
+                  <TableCell className="text-right">
+                    <Button size="icon" variant="ghost" onClick={() => openEdit(t)}><Pencil className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" onClick={() => remove(t)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  </TableCell>
                 </TableRow>
               );
             })}
             {rows.length === 0 && (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No transactions yet</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No transactions yet</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
       </Card>
+
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit {editing?.type}</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2"><Label>Date</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
+            <div className="space-y-2">
+              <Label>Amount</Label>
+              <Input type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} disabled={!amountEditable} />
+              {!amountEditable && <p className="text-xs text-muted-foreground">Amount is computed from line items. Edit the source entry on its page to change it.</p>}
+            </div>
+            <div className="space-y-2"><Label>Notes</Label><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
+            <Button onClick={save} disabled={busy}>{busy ? "Saving..." : "Save"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
