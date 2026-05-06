@@ -23,6 +23,9 @@ export function MultiItemForm({ mode, onDone }: { mode: Mode; onDone?: () => voi
   const { user } = useAuth();
   const qc = useQueryClient();
   const { data: products = [] } = useProducts();
+  const { data: settings } = useSettings();
+  const periodicMode = settings?.sales_tracking_mode === "periodic";
+  const hideUnitsOnPayout = mode === "payout" && periodicMode;
 
   // Parent-level fields
   const [date, setDate] = useState(today());
