@@ -182,7 +182,8 @@ export function computeReport({ settings, stock, stockItems, revenue, revenueIte
     + generalReceived.reduce((a, g) => a + Number(g.amount), 0);
   const allTimeExpenses = expenses.reduce((a, e) => a + Number(e.amount), 0);
   const allTimeStock = stock.reduce((a, s) => a + Number(s.total_cost), 0);
-  const cash = Number(settings?.starting_cash ?? 0) + allTimeReceived - allTimeExpenses - allTimeStock;
+  const openingCash = Number(openingBalance?.cash_amount ?? 0);
+  const cash = openingCash + Number(settings?.starting_cash ?? 0) + allTimeReceived - allTimeExpenses - allTimeStock;
   const walletBalance = allTimeEarned - allTimeReceived;
 
   return {
