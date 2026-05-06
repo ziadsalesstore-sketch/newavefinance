@@ -145,7 +145,7 @@ export default function TransactionsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.map((t) => {
+            {sortedRows.map((t) => {
               const negative = t.type === "Expense" || t.type === "Stock Purchase" || t.type === "Personal Withdrawal";
               return (
                 <TableRow key={t.id}>
