@@ -50,9 +50,11 @@ export function MultiItemForm({ mode, onDone }: { mode: Mode; onDone?: () => voi
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (products.length === 0) return toast.error("Add a product first");
+    if (mode !== "payout" || !periodicMode) {
+      if (products.length === 0) return toast.error("Add a product first");
+    }
     const valid = items.filter((it) => it.product_id);
-    if (valid.length === 0) return toast.error("Add at least one product line");
+    if ((mode !== "payout" || !periodicMode) && valid.length === 0) return toast.error("Add at least one product line");
 
     setBusy(true);
     try {
