@@ -14,6 +14,8 @@ export type Transaction = { id: string; date: string; type: string; category: st
 export type GeneralReceivedPayment = { id: string; date: string; amount: number; note: string | null; };
 export type OpeningBalance = { id: string; date: string; cash_amount: number; notes: string | null; };
 export type OpeningBalanceItem = { id: string; opening_balance_id: string; product_id: string; quantity: number; unit_cost: number; };
+export type MarketingCampaign = { id: string; date: string; extra_cost: number; notes: string | null; };
+export type MarketingCampaignItem = { id: string; campaign_id: string; product_id: string; quantity: number; unit_cost: number; date?: string };
 
 const fetchAll = <T,>(table: string, order = "date") => async (): Promise<T[]> => {
   const { data, error } = await supabase.from(table as any).select("*").order(order, { ascending: false });
