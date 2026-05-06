@@ -113,7 +113,7 @@ export default function ReportsPage() {
         Number(p.avgCost.toFixed(2)),
         p.unitsSold,
         Number(p.cogs.toFixed(2)),
-        p.unitsPurchased - p.unitsSold - (p.unitsUsed ?? 0),
+        p.unitsPurchased - p.unitsSold - (p.unitsUsed ?? 0) + (p.invIncrease ?? 0) - (p.invDecrease ?? 0),
       ]),
     ];
     const ws = XLSX.utils.aoa_to_sheet(rows);
@@ -165,7 +165,7 @@ export default function ReportsPage() {
       ...r.breakdown.map((p) => [
         p.productName, p.unitsPurchased, Number(p.avgCost.toFixed(2)),
         p.unitsSold, Number(p.cogs.toFixed(2)),
-        p.unitsPurchased - p.unitsSold - (p.unitsUsed ?? 0),
+        p.unitsPurchased - p.unitsSold - (p.unitsUsed ?? 0) + (p.invIncrease ?? 0) - (p.invDecrease ?? 0),
       ]),
     ];
     const pbWs = XLSX.utils.aoa_to_sheet(pbRows);
@@ -272,7 +272,7 @@ export default function ReportsPage() {
             </TableHeader>
             <TableBody>
               {r.breakdown.map((p) => {
-                const left = p.unitsPurchased - p.unitsSold - (p.unitsUsed ?? 0);
+                const left = p.unitsPurchased - p.unitsSold - (p.unitsUsed ?? 0) + (p.invIncrease ?? 0) - (p.invDecrease ?? 0);
                 return (
                   <TableRow key={p.productId}>
                     <TableCell className="font-medium">{p.productName}</TableCell>
