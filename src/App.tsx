@@ -15,6 +15,7 @@ import SalesPage from "./pages/SalesPage";
 import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
 import WithdrawalsPage from "./pages/WithdrawalsPage";
+import OpeningBalancePage from "./pages/OpeningBalancePage";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound.tsx";
 
