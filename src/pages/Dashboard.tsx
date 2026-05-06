@@ -19,10 +19,12 @@ export default function Dashboard() {
   const { data: revenueItems = [] } = useRevenueItems();
   const { data: products = [] } = useProducts();
   const { data: generalReceived = [] } = useGeneralReceivedPayments();
+  const { data: openingBalance = null } = useOpeningBalance();
+  const { data: openingItems = [] } = useOpeningBalanceItems();
 
   const report = useMemo(
-    () => settings ? computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived }) : null,
-    [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived]
+    () => settings ? computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems }) : null,
+    [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems]
   );
 
   const expensesByCategory = useMemo(() => {
