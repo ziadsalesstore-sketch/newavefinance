@@ -122,6 +122,42 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_adjustments: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          note: string | null
+          product_id: string
+          quantity: number
+          type: string
+          unit_cost: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          note?: string | null
+          product_id: string
+          quantity?: number
+          type: string
+          unit_cost?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          note?: string | null
+          product_id?: string
+          quantity?: number
+          type?: string
+          unit_cost?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       marketing_campaign_items: {
         Row: {
           campaign_id: string
