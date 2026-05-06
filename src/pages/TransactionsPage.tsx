@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,6 +38,16 @@ const INVALIDATE_KEYS = ["transactions", "stock", "stock_items", "revenue", "rev
 export default function TransactionsPage() {
   const { data: rows = [] } = useTransactions();
   const qc = useQueryClient();
+  const [sortBy, setSortBy] = useState<"date_desc" | "date_asc" | "amount_desc" | "amount_asc">("date_desc");
+
+  const sortedRows = [...rows].sort((a, b) => {
+    switch (sortBy) {
+      case "date_asc": return a.date.localeCompare(b.date);
+      case "amount_desc": return Number(b.amount) - Number(a.amount);
+      case "amount_asc": return Number(a.amount) - Number(b.amount);
+      default: return b.date.localeCompare(a.date);
+    }
+  });
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [date, setDate] = useState("");
   const [amount, setAmount] = useState("");
@@ -103,9 +114,23 @@ export default function TransactionsPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Transactions</h1>
-        <p className="text-sm text-muted-foreground">Auto-generated ledger of all financial activity. Edits sync back to the source entry.</p>
+      <div className="mb-6 flex items-end justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold">Transactions</h1>
+          <p className="text-sm text-muted-foreground">Auto-generated ledger of all financial activity. Edits sync back to the source entry.</p>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Sort by</Label>
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+            <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="date_desc">Date (Newest First)</SelectItem>
+              <SelectItem value="date_asc">Date (Oldest First)</SelectItem>
+              <SelectItem value="amount_desc">Value (Highest First)</SelectItem>
+              <SelectItem value="amount_asc">Value (Lowest First)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       <Card className="overflow-hidden">
         <Table>
@@ -120,7 +145,7 @@ export default function TransactionsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.map((t) => {
+            {sortedRows.map((t) => {
               const negative = t.type === "Expense" || t.type === "Stock Purchase" || t.type === "Personal Withdrawal";
               return (
                 <TableRow key={t.id}>
