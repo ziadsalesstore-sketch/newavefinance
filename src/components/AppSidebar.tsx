@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, ArrowLeftRight, Package, TrendingUp, Receipt, BarChart3, FileText, Settings as SettingsIcon, LogOut, Boxes, Wallet, Coins } from "lucide-react";
+import { LayoutDashboard, ArrowLeftRight, Package, TrendingUp, Receipt, BarChart3, FileText, Settings as SettingsIcon, LogOut, Boxes, Wallet, Coins, Megaphone } from "lucide-react";
 import logo from "@/assets/logo.jpg";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,6 +12,7 @@ const items = [
   { title: "Stock", url: "/stock", icon: Package },
   { title: "Revenue", url: "/revenue", icon: TrendingUp },
   { title: "Expenses", url: "/expenses", icon: Receipt },
+  { title: "Marketing", url: "/marketing", icon: Megaphone },
   { title: "Sales", url: "/sales", icon: BarChart3 },
   { title: "Withdrawals", url: "/withdrawals", icon: Wallet },
   { title: "Reports", url: "/reports", icon: FileText },

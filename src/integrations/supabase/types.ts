@@ -92,6 +92,71 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_campaign_items: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          id: string
+          product_id: string
+          quantity: number
+          unit_cost: number
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          id?: string
+          product_id: string
+          quantity?: number
+          unit_cost?: number
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          product_id?: string
+          quantity?: number
+          unit_cost?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_campaign_items_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketing_campaigns: {
+        Row: {
+          created_at: string
+          date: string
+          extra_cost: number
+          id: string
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          extra_cost?: number
+          id?: string
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          extra_cost?: number
+          id?: string
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       opening_balance_items: {
         Row: {
           created_at: string

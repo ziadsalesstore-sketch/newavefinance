@@ -14,6 +14,8 @@ export type Transaction = { id: string; date: string; type: string; category: st
 export type GeneralReceivedPayment = { id: string; date: string; amount: number; note: string | null; };
 export type OpeningBalance = { id: string; date: string; cash_amount: number; notes: string | null; };
 export type OpeningBalanceItem = { id: string; opening_balance_id: string; product_id: string; quantity: number; unit_cost: number; };
+export type MarketingCampaign = { id: string; date: string; extra_cost: number; notes: string | null; };
+export type MarketingCampaignItem = { id: string; campaign_id: string; product_id: string; quantity: number; unit_cost: number; date?: string };
 
 const fetchAll = <T,>(table: string, order = "date") => async (): Promise<T[]> => {
   const { data, error } = await supabase.from(table as any).select("*").order(order, { ascending: false });
@@ -50,6 +52,20 @@ export const useOpeningBalance = () => useQuery({
 export const useOpeningBalanceItems = () => useQuery({
   queryKey: ["opening_balance_items"],
   queryFn: fetchAll<OpeningBalanceItem>("opening_balance_items", "created_at"),
+});
+
+export const useMarketingCampaigns = () => useQuery({
+  queryKey: ["marketing_campaigns"],
+  queryFn: fetchAll<MarketingCampaign>("marketing_campaigns"),
+});
+
+export const useMarketingCampaignItems = () => useQuery({
+  queryKey: ["marketing_campaign_items"],
+  queryFn: async (): Promise<MarketingCampaignItem[]> => {
+    const { data, error } = await supabase.from("marketing_campaign_items" as any).select("*, marketing_campaigns(date)");
+    if (error) throw error;
+    return (data ?? []).map((r: any) => ({ ...r, date: r.marketing_campaigns?.date })) as MarketingCampaignItem[];
+  },
 });
 
 export const useStockPurchaseItems = () => useQuery({
@@ -95,6 +111,7 @@ export type ReportInputs = {
   generalReceived?: GeneralReceivedPayment[];
   openingBalance?: OpeningBalance | null;
   openingItems?: OpeningBalanceItem[];
+  marketingItems?: MarketingCampaignItem[];
   start?: string;
   end?: string;
 };
@@ -106,24 +123,23 @@ export type ProductBreakdown = {
   totalCost: number;
   avgCost: number;
   unitsSold: number;
+  unitsUsed: number;
   cogs: number;
 };
 
-export function computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived = [], openingBalance = null, openingItems = [], start, end }: ReportInputs) {
+export function computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived = [], openingBalance = null, openingItems = [], marketingItems = [], start, end }: ReportInputs) {
   const productMap = new Map(products.map((p) => [p.id, p]));
 
-  // Per-product purchase aggregates (up to end date) — fall back to all if no end
   const perProduct = new Map<string, ProductBreakdown>();
   const ensure = (pid: string): ProductBreakdown => {
     let row = perProduct.get(pid);
     if (!row) {
-      row = { productId: pid, productName: productMap.get(pid)?.name ?? "Unknown", unitsPurchased: 0, totalCost: 0, avgCost: 0, unitsSold: 0, cogs: 0 };
+      row = { productId: pid, productName: productMap.get(pid)?.name ?? "Unknown", unitsPurchased: 0, totalCost: 0, avgCost: 0, unitsSold: 0, unitsUsed: 0, cogs: 0 };
       perProduct.set(pid, row);
     }
     return row;
   };
 
-  // Opening inventory items count as initial purchases for cost averaging
   openingItems.forEach((it) => {
     const row = ensure(it.product_id);
     row.unitsPurchased += Number(it.quantity);
@@ -138,7 +154,6 @@ export function computeReport({ settings, stock, stockItems, revenue, revenueIte
   });
   perProduct.forEach((row) => { row.avgCost = row.unitsPurchased > 0 ? row.totalCost / row.unitsPurchased : 0; });
 
-  // Per-product units sold based on mode
   const periodic = settings?.sales_tracking_mode === "periodic";
   if (periodic) {
     salesItems.forEach((it) => {
@@ -152,9 +167,18 @@ export function computeReport({ settings, stock, stockItems, revenue, revenueIte
     });
   }
 
-  // Per-product COGS
+  // Marketing inventory consumption — reduces inventory, counts as an expense (not cash)
+  let marketingInventoryCost = 0;
+  marketingItems.forEach((it) => {
+    if (!inRange(it.date, start, end)) return;
+    const row = ensure(it.product_id);
+    row.unitsUsed += Number(it.quantity);
+    marketingInventoryCost += Number(it.quantity) * Number(it.unit_cost);
+  });
+
+  // Per-product COGS (includes both sold and used-in-marketing units)
   let cogs = 0;
-  perProduct.forEach((row) => { row.cogs = row.unitsSold * row.avgCost; cogs += row.cogs; });
+  perProduct.forEach((row) => { row.cogs = (row.unitsSold + row.unitsUsed) * row.avgCost; cogs += row.cogs; });
   const breakdown = Array.from(perProduct.values()).sort((a, b) => b.cogs - a.cogs);
 
   const unitsSold = breakdown.reduce((a, r) => a + r.unitsSold, 0);
@@ -170,8 +194,11 @@ export function computeReport({ settings, stock, stockItems, revenue, revenueIte
   const expensesTotal = expenses.filter((e) => inRange(e.date, start, end)).reduce((a, e) => a + Number(e.amount), 0);
   const stockOutflow = stock.filter((s) => inRange(s.date, start, end)).reduce((a, s) => a + Number(s.total_cost), 0);
 
+  // Marketing inventory cost is a P&L expense but does NOT touch cash (already paid via stock)
+  const expensesForPnl = expensesTotal + marketingInventoryCost;
+
   const grossProfit = revenueTotal - cogs;
-  const netProfit = grossProfit - expensesTotal;
+  const netProfit = grossProfit - expensesForPnl;
   const grossMargin = revenueTotal > 0 ? (grossProfit / revenueTotal) * 100 : 0;
   const netMargin = revenueTotal > 0 ? (netProfit / revenueTotal) * 100 : 0;
 
@@ -187,8 +214,9 @@ export function computeReport({ settings, stock, stockItems, revenue, revenueIte
   const walletBalance = allTimeEarned - allTimeReceived;
 
   return {
-    revenue: revenueTotal, cashReceived, expenses: expensesTotal, cogs, grossProfit, netProfit,
+    revenue: revenueTotal, cashReceived, expenses: expensesForPnl, cogs, grossProfit, netProfit,
     grossMargin, netMargin, unitsSold, avgCostPerUnit, totalPurchaseCost, totalUnitsPurchased,
+    marketingInventoryCost,
     inflows: cashReceived, outflows: expensesTotal + stockOutflow, netCashFlow: cashReceived - expensesTotal - stockOutflow,
     cash, walletBalance, walletPeriod, allTimeEarned, allTimeReceived,
     breakdown,
