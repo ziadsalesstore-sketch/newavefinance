@@ -18,13 +18,14 @@ export default function ReportsPage() {
   const { data: generalReceived = [] } = useGeneralReceivedPayments();
   const { data: openingBalance = null } = useOpeningBalance();
   const { data: openingItems = [] } = useOpeningBalanceItems();
+  const { data: marketingItems = [] } = useMarketingCampaignItems();
 
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
 
   const r = useMemo(
-    () => settings ? computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, start: start || undefined, end: end || undefined }) : null,
-    [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, start, end]
+    () => settings ? computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, start: start || undefined, end: end || undefined }) : null,
+    [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, start, end]
   );
   if (!r) return null;
 
