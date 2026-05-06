@@ -38,6 +38,16 @@ const INVALIDATE_KEYS = ["transactions", "stock", "stock_items", "revenue", "rev
 export default function TransactionsPage() {
   const { data: rows = [] } = useTransactions();
   const qc = useQueryClient();
+  const [sortBy, setSortBy] = useState<"date_desc" | "date_asc" | "amount_desc" | "amount_asc">("date_desc");
+
+  const sortedRows = [...rows].sort((a, b) => {
+    switch (sortBy) {
+      case "date_asc": return a.date.localeCompare(b.date);
+      case "amount_desc": return Number(b.amount) - Number(a.amount);
+      case "amount_asc": return Number(a.amount) - Number(b.amount);
+      default: return b.date.localeCompare(a.date);
+    }
+  });
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [date, setDate] = useState("");
   const [amount, setAmount] = useState("");
