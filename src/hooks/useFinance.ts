@@ -123,6 +123,13 @@ export function computeReport({ settings, stock, stockItems, revenue, revenueIte
     return row;
   };
 
+  // Opening inventory items count as initial purchases for cost averaging
+  openingItems.forEach((it) => {
+    const row = ensure(it.product_id);
+    row.unitsPurchased += Number(it.quantity);
+    row.totalCost += Number(it.quantity) * Number(it.unit_cost);
+  });
+
   stockItems.forEach((it) => {
     if (end && it.date && it.date > end) return;
     const row = ensure(it.product_id);
