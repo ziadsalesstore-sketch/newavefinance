@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import * as XLSX from "xlsx";
-import { useSettings, useStockPurchases, useRevenuePayouts, useExpenses, useSalesRecords, useStockPurchaseItems, useSalesItems, useRevenueItems, useProducts, useGeneralReceivedPayments, useOpeningBalance, useOpeningBalanceItems, useMarketingCampaignItems, usePersonalWithdrawals, useCashAdjustments, computeReport, fmt } from "@/hooks/useFinance";
+import { useSettings, useStockPurchases, useRevenuePayouts, useExpenses, useSalesRecords, useStockPurchaseItems, useSalesItems, useRevenueItems, useProducts, useGeneralReceivedPayments, useOpeningBalance, useOpeningBalanceItems, useMarketingCampaignItems, usePersonalWithdrawals, useCashAdjustments, useInventoryAdjustments, computeReport, fmt } from "@/hooks/useFinance";
 import { DateRange } from "@/components/DateRange";
 import { Card } from "@/components/ui/card";
 import { MetricCard } from "@/components/MetricCard";
@@ -24,13 +24,14 @@ export default function ReportsPage() {
   const { data: marketingItems = [] } = useMarketingCampaignItems();
   const { data: withdrawals = [] } = usePersonalWithdrawals();
   const { data: cashAdjustments = [] } = useCashAdjustments();
+  const { data: inventoryAdjustments = [] } = useInventoryAdjustments();
 
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
 
   const r = useMemo(
-    () => settings ? computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, withdrawals, cashAdjustments, start: start || undefined, end: end || undefined }) : null,
-    [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, withdrawals, cashAdjustments, start, end]
+    () => settings ? computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, withdrawals, cashAdjustments, inventoryAdjustments, start: start || undefined, end: end || undefined }) : null,
+    [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, withdrawals, cashAdjustments, inventoryAdjustments, start, end]
   );
 
   const expensesByCategory = useMemo(() => {
@@ -113,7 +114,7 @@ export default function ReportsPage() {
         Number(p.avgCost.toFixed(2)),
         p.unitsSold,
         Number(p.cogs.toFixed(2)),
-        p.unitsPurchased - p.unitsSold - (p.unitsUsed ?? 0),
+        p.unitsPurchased - p.unitsSold - (p.unitsUsed ?? 0) + (p.invIncrease ?? 0) - (p.invDecrease ?? 0),
       ]),
     ];
     const ws = XLSX.utils.aoa_to_sheet(rows);
@@ -165,7 +166,7 @@ export default function ReportsPage() {
       ...r.breakdown.map((p) => [
         p.productName, p.unitsPurchased, Number(p.avgCost.toFixed(2)),
         p.unitsSold, Number(p.cogs.toFixed(2)),
-        p.unitsPurchased - p.unitsSold - (p.unitsUsed ?? 0),
+        p.unitsPurchased - p.unitsSold - (p.unitsUsed ?? 0) + (p.invIncrease ?? 0) - (p.invDecrease ?? 0),
       ]),
     ];
     const pbWs = XLSX.utils.aoa_to_sheet(pbRows);
@@ -272,7 +273,7 @@ export default function ReportsPage() {
             </TableHeader>
             <TableBody>
               {r.breakdown.map((p) => {
-                const left = p.unitsPurchased - p.unitsSold - (p.unitsUsed ?? 0);
+                const left = p.unitsPurchased - p.unitsSold - (p.unitsUsed ?? 0) + (p.invIncrease ?? 0) - (p.invDecrease ?? 0);
                 return (
                   <TableRow key={p.productId}>
                     <TableCell className="font-medium">{p.productName}</TableCell>
