@@ -121,6 +121,7 @@ export type ReportInputs = {
   openingBalance?: OpeningBalance | null;
   openingItems?: OpeningBalanceItem[];
   marketingItems?: MarketingCampaignItem[];
+  withdrawals?: { date: string; amount: number }[];
   start?: string;
   end?: string;
 };
@@ -136,7 +137,7 @@ export type ProductBreakdown = {
   cogs: number;
 };
 
-export function computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived = [], openingBalance = null, openingItems = [], marketingItems = [], start, end }: ReportInputs) {
+export function computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived = [], openingBalance = null, openingItems = [], marketingItems = [], withdrawals = [], start, end }: ReportInputs) {
   const productMap = new Map(products.map((p) => [p.id, p]));
 
   const perProduct = new Map<string, ProductBreakdown>();
