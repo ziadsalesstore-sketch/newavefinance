@@ -230,15 +230,22 @@ export function computeReport({ settings, stock, stockItems, revenue, revenueIte
   const allTimeExpenses = expenses.reduce((a, e) => a + Number(e.amount), 0);
   const allTimeStock = stock.reduce((a, s) => a + Number(s.total_cost), 0);
   const allTimeWithdrawals = withdrawals.reduce((a, w) => a + Number(w.amount), 0);
+  const allTimeAdjustmentsNet = cashAdjustments.reduce((a, c) => a + (c.type === "surplus" ? Number(c.amount) : -Number(c.amount)), 0);
+  const periodAdjustments = cashAdjustments.filter((c) => inRange(c.date, start, end));
+  const adjShortagePeriod = periodAdjustments.filter((c) => c.type === "shortage").reduce((a, c) => a + Number(c.amount), 0);
+  const adjSurplusPeriod = periodAdjustments.filter((c) => c.type === "surplus").reduce((a, c) => a + Number(c.amount), 0);
+  const adjustmentsNetPeriod = adjSurplusPeriod - adjShortagePeriod;
   const openingCash = Number(openingBalance?.cash_amount ?? 0);
-  const cash = openingCash + Number(settings?.starting_cash ?? 0) + allTimeReceived - allTimeExpenses - allTimeStock - allTimeWithdrawals;
+  const cash = openingCash + Number(settings?.starting_cash ?? 0) + allTimeReceived - allTimeExpenses - allTimeStock - allTimeWithdrawals + allTimeAdjustmentsNet;
   const walletBalance = allTimeEarned - allTimeReceived;
 
   return {
     revenue: revenueTotal, cashReceived, expenses: expensesForPnl, cogs, grossProfit, netProfit,
     grossMargin, netMargin, unitsSold, avgCostPerUnit, totalPurchaseCost, totalUnitsPurchased,
     marketingInventoryCost,
-    inflows: cashReceived, outflows: expensesTotal + stockOutflow, netCashFlow: cashReceived - expensesTotal - stockOutflow,
+    inflows: cashReceived + adjSurplusPeriod, outflows: expensesTotal + stockOutflow + adjShortagePeriod,
+    netCashFlow: cashReceived - expensesTotal - stockOutflow + adjustmentsNetPeriod,
+    cashAdjustmentsShortage: adjShortagePeriod, cashAdjustmentsSurplus: adjSurplusPeriod, cashAdjustmentsNet: adjustmentsNetPeriod,
     cash, walletBalance, walletPeriod, allTimeEarned, allTimeReceived,
     breakdown,
   };
