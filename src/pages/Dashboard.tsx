@@ -24,10 +24,11 @@ export default function Dashboard() {
   const { data: marketingItems = [] } = useMarketingCampaignItems();
   const { data: withdrawals = [] } = usePersonalWithdrawals();
   const { data: cashAdjustments = [] } = useCashAdjustments();
+  const { data: inventoryAdjustments = [] } = useInventoryAdjustments();
 
   const report = useMemo(
-    () => settings ? computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, withdrawals, cashAdjustments }) : null,
-    [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, withdrawals, cashAdjustments]
+    () => settings ? computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, withdrawals, cashAdjustments, inventoryAdjustments }) : null,
+    [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, withdrawals, cashAdjustments, inventoryAdjustments]
   );
 
   const expensesByCategory = useMemo(() => {
