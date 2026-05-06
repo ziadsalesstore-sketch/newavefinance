@@ -14,7 +14,7 @@ const items = [
   { title: "Expenses", url: "/expenses", icon: Receipt },
   { title: "Sales", url: "/sales", icon: BarChart3 },
   { title: "Withdrawals", url: "/withdrawals", icon: Wallet },
-  { title: "Cash Adjustments", url: "/cash-adjustments", icon: Scale },
+  { title: "Adjustments", url: "/adjustments", icon: Scale },
   { title: "Reports", url: "/reports", icon: FileText },
   { title: "Settings", url: "/settings", icon: SettingsIcon },
 ];
