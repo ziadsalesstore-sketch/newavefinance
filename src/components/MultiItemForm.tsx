@@ -138,41 +138,46 @@ export function MultiItemForm({ mode, onDone }: { mode: Mode; onDone?: () => voi
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label>Products</Label>
-          <Button type="button" size="sm" variant="outline" onClick={addItem}><Plus className="h-3 w-3 mr-1" />Add product</Button>
-        </div>
-        {items.map((it, i) => (
-          <Card key={i} className="p-3 space-y-2">
-            <div className="flex gap-2">
-              <Select value={it.product_id} onValueChange={(v) => updateItem(i, { product_id: v })}>
-                <SelectTrigger className="flex-1"><SelectValue placeholder="Select product..." /></SelectTrigger>
-                <SelectContent>
-                  {products.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              {items.length > 1 && (
-                <Button type="button" size="icon" variant="ghost" onClick={() => removeItem(i)}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              )}
-            </div>
-            {mode === "stock" ? (
-              <div className="grid grid-cols-3 gap-2 items-end">
-                <div><Label className="text-xs">Quantity</Label><Input type="number" step="any" value={it.quantity ?? ""} onChange={(e) => updateItem(i, { quantity: e.target.value })} required /></div>
-                <div><Label className="text-xs">Total cost</Label><Input type="number" step="0.01" value={it.total_cost ?? ""} onChange={(e) => updateItem(i, { total_cost: e.target.value })} required /></div>
-                <div className="text-xs text-muted-foreground pb-2">Cost/unit: <span className="font-medium tabular-nums">{Number(it.quantity) > 0 ? fmt(Number(it.total_cost) / Number(it.quantity)) : "—"}</span></div>
+      {!hideUnitsOnPayout && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label>Products</Label>
+            <Button type="button" size="sm" variant="outline" onClick={addItem}><Plus className="h-3 w-3 mr-1" />Add product</Button>
+          </div>
+          {items.map((it, i) => (
+            <Card key={i} className="p-3 space-y-2">
+              <div className="flex gap-2">
+                <Select value={it.product_id} onValueChange={(v) => updateItem(i, { product_id: v })}>
+                  <SelectTrigger className="flex-1"><SelectValue placeholder="Select product..." /></SelectTrigger>
+                  <SelectContent>
+                    {products.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                {items.length > 1 && (
+                  <Button type="button" size="icon" variant="ghost" onClick={() => removeItem(i)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                )}
               </div>
-            ) : (
-              <div><Label className="text-xs">Units sold</Label><Input type="number" step="any" value={it.units_sold ?? ""} onChange={(e) => updateItem(i, { units_sold: e.target.value })} required /></div>
-            )}
-          </Card>
-        ))}
-        <div className="text-sm text-muted-foreground flex justify-between pt-1">
-          {mode === "stock" ? <><span>Total quantity: <span className="tabular-nums">{totalUnits}</span></span><span>Total cost: <span className="font-semibold tabular-nums text-foreground">{fmt(totalCost)}</span></span></> : <span>Total units: <span className="font-semibold tabular-nums text-foreground">{totalUnits}</span></span>}
+              {mode === "stock" ? (
+                <div className="grid grid-cols-3 gap-2 items-end">
+                  <div><Label className="text-xs">Quantity</Label><Input type="number" step="any" value={it.quantity ?? ""} onChange={(e) => updateItem(i, { quantity: e.target.value })} required /></div>
+                  <div><Label className="text-xs">Total cost</Label><Input type="number" step="0.01" value={it.total_cost ?? ""} onChange={(e) => updateItem(i, { total_cost: e.target.value })} required /></div>
+                  <div className="text-xs text-muted-foreground pb-2">Cost/unit: <span className="font-medium tabular-nums">{Number(it.quantity) > 0 ? fmt(Number(it.total_cost) / Number(it.quantity)) : "—"}</span></div>
+                </div>
+              ) : (
+                <div><Label className="text-xs">Units sold</Label><Input type="number" step="any" value={it.units_sold ?? ""} onChange={(e) => updateItem(i, { units_sold: e.target.value })} required /></div>
+              )}
+            </Card>
+          ))}
+          <div className="text-sm text-muted-foreground flex justify-between pt-1">
+            {mode === "stock" ? <><span>Total quantity: <span className="tabular-nums">{totalUnits}</span></span><span>Total cost: <span className="font-semibold tabular-nums text-foreground">{fmt(totalCost)}</span></span></> : <span>Total units: <span className="font-semibold tabular-nums text-foreground">{totalUnits}</span></span>}
+          </div>
         </div>
-      </div>
-
-      <div className="space-y-2"><Label>Notes</Label><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+      )}
+      {hideUnitsOnPayout && (
+        <p className="text-xs text-muted-foreground">Units sold are tracked separately in the Sales Records section (Periodic mode).</p>
+      )}
       <Button type="submit" className="w-full" disabled={busy}>{busy ? "Saving..." : "Save"}</Button>
     </form>
   );
