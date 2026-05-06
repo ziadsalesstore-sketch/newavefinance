@@ -141,6 +141,7 @@ export type ReportInputs = {
   marketingItems?: MarketingCampaignItem[];
   withdrawals?: { date: string; amount: number }[];
   cashAdjustments?: { date: string; type: "shortage" | "surplus"; amount: number }[];
+  inventoryAdjustments?: { date: string; product_id: string; type: "increase" | "decrease"; quantity: number; unit_cost: number }[];
   start?: string;
   end?: string;
 };
@@ -153,6 +154,8 @@ export type ProductBreakdown = {
   avgCost: number;
   unitsSold: number;
   unitsUsed: number;
+  invIncrease: number;
+  invDecrease: number;
   cogs: number;
 };
 
