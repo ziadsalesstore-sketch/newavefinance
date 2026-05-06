@@ -93,6 +93,8 @@ export type ReportInputs = {
   salesItems: SalesItem[];
   products: Product[];
   generalReceived?: GeneralReceivedPayment[];
+  openingBalance?: OpeningBalance | null;
+  openingItems?: OpeningBalanceItem[];
   start?: string;
   end?: string;
 };
@@ -107,7 +109,7 @@ export type ProductBreakdown = {
   cogs: number;
 };
 
-export function computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived = [], start, end }: ReportInputs) {
+export function computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived = [], openingBalance = null, openingItems = [], start, end }: ReportInputs) {
   const productMap = new Map(products.map((p) => [p.id, p]));
 
   // Per-product purchase aggregates (up to end date) — fall back to all if no end
