@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import * as XLSX from "xlsx";
-import { useSettings, useStockPurchases, useRevenuePayouts, useExpenses, useSalesRecords, useStockPurchaseItems, useSalesItems, useRevenueItems, useProducts, useGeneralReceivedPayments, useOpeningBalance, useOpeningBalanceItems, useMarketingCampaignItems, usePersonalWithdrawals, useCashAdjustments, computeReport, fmt } from "@/hooks/useFinance";
+import { useSettings, useStockPurchases, useRevenuePayouts, useExpenses, useSalesRecords, useStockPurchaseItems, useSalesItems, useRevenueItems, useProducts, useGeneralReceivedPayments, useOpeningBalance, useOpeningBalanceItems, useMarketingCampaignItems, usePersonalWithdrawals, useCashAdjustments, useInventoryAdjustments, computeReport, fmt } from "@/hooks/useFinance";
 import { DateRange } from "@/components/DateRange";
 import { Card } from "@/components/ui/card";
 import { MetricCard } from "@/components/MetricCard";
