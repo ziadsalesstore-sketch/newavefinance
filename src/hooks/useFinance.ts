@@ -54,6 +54,15 @@ export const useOpeningBalanceItems = () => useQuery({
   queryFn: fetchAll<OpeningBalanceItem>("opening_balance_items", "created_at"),
 });
 
+export const useCashAdjustments = () => useQuery({
+  queryKey: ["cash_adjustments"],
+  queryFn: async (): Promise<{ id: string; date: string; type: "shortage" | "surplus"; amount: number; note: string | null }[]> => {
+    const { data, error } = await supabase.from("cash_adjustments" as any).select("*").order("date", { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as any;
+  },
+});
+
 export const usePersonalWithdrawals = () => useQuery({
   queryKey: ["personal_withdrawals"],
   queryFn: async (): Promise<{ id: string; date: string; amount: number; note: string | null }[]> => {
