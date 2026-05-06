@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useSettings, useStockPurchases, useRevenuePayouts, useExpenses, useSalesRecords, useTransactions, useStockPurchaseItems, useSalesItems, useRevenueItems, useProducts, useGeneralReceivedPayments, useOpeningBalance, useOpeningBalanceItems, useMarketingCampaignItems, usePersonalWithdrawals, computeReport, fmt } from "@/hooks/useFinance";
+import { useSettings, useStockPurchases, useRevenuePayouts, useExpenses, useSalesRecords, useTransactions, useStockPurchaseItems, useSalesItems, useRevenueItems, useProducts, useGeneralReceivedPayments, useOpeningBalance, useOpeningBalanceItems, useMarketingCampaignItems, usePersonalWithdrawals, useCashAdjustments, computeReport, fmt } from "@/hooks/useFinance";
 import { MetricCard } from "@/components/MetricCard";
 import { Wallet, TrendingUp, Receipt, LineChart as LineIcon, Banknote, Truck, Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -23,10 +23,11 @@ export default function Dashboard() {
   const { data: openingItems = [] } = useOpeningBalanceItems();
   const { data: marketingItems = [] } = useMarketingCampaignItems();
   const { data: withdrawals = [] } = usePersonalWithdrawals();
+  const { data: cashAdjustments = [] } = useCashAdjustments();
 
   const report = useMemo(
-    () => settings ? computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, withdrawals }) : null,
-    [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, withdrawals]
+    () => settings ? computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, withdrawals, cashAdjustments }) : null,
+    [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, withdrawals, cashAdjustments]
   );
 
   const expensesByCategory = useMemo(() => {
