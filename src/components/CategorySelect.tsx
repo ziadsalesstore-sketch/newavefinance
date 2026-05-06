@@ -78,7 +78,9 @@ export function CategorySelect({ value, onChange }: { value: string; onChange: (
       <PopoverContent
         className="p-0 w-[--radix-popover-trigger-width] max-w-[calc(100vw-2rem)]"
         align="start"
+        side="bottom"
         sideOffset={4}
+        avoidCollisions={false}
       >
         <div className="p-2 border-b">
           <Input
