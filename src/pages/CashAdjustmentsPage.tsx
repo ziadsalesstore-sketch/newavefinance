@@ -80,9 +80,10 @@ export default function CashAdjustmentsPage() {
     const r = computeReport({
       settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products,
       generalReceived, openingBalance, openingItems, marketingItems, withdrawals,
+      cashAdjustments: rows,
     });
-    return r.cash + adjustmentsNet;
-  }, [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, withdrawals, adjustmentsNet]);
+    return r.cash;
+  }, [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, withdrawals, rows]);
 
   const totals = useMemo(() => {
     const shortage = rows.filter((r) => r.type === "shortage").reduce((a, r) => a + Number(r.amount), 0);
