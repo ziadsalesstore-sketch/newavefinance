@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Opening Balance", url: "/opening-balance", icon: Coins },
   { title: "Transactions", url: "/transactions", icon: ArrowLeftRight },
   { title: "Products", url: "/products", icon: Boxes },
   { title: "Stock", url: "/stock", icon: Package },
