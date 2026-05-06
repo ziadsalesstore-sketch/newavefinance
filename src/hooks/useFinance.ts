@@ -54,6 +54,20 @@ export const useOpeningBalanceItems = () => useQuery({
   queryFn: fetchAll<OpeningBalanceItem>("opening_balance_items", "created_at"),
 });
 
+export const useMarketingCampaigns = () => useQuery({
+  queryKey: ["marketing_campaigns"],
+  queryFn: fetchAll<MarketingCampaign>("marketing_campaigns"),
+});
+
+export const useMarketingCampaignItems = () => useQuery({
+  queryKey: ["marketing_campaign_items"],
+  queryFn: async (): Promise<MarketingCampaignItem[]> => {
+    const { data, error } = await supabase.from("marketing_campaign_items" as any).select("*, marketing_campaigns(date)");
+    if (error) throw error;
+    return (data ?? []).map((r: any) => ({ ...r, date: r.marketing_campaigns?.date })) as MarketingCampaignItem[];
+  },
+});
+
 export const useStockPurchaseItems = () => useQuery({
   queryKey: ["stock_items"],
   queryFn: async (): Promise<StockPurchaseItem[]> => {
