@@ -131,6 +131,7 @@ export type ReportInputs = {
   openingItems?: OpeningBalanceItem[];
   marketingItems?: MarketingCampaignItem[];
   withdrawals?: { date: string; amount: number }[];
+  cashAdjustments?: { date: string; type: "shortage" | "surplus"; amount: number }[];
   start?: string;
   end?: string;
 };
