@@ -159,14 +159,14 @@ export type ProductBreakdown = {
   cogs: number;
 };
 
-export function computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived = [], openingBalance = null, openingItems = [], marketingItems = [], withdrawals = [], cashAdjustments = [], start, end }: ReportInputs) {
+export function computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived = [], openingBalance = null, openingItems = [], marketingItems = [], withdrawals = [], cashAdjustments = [], inventoryAdjustments = [], start, end }: ReportInputs) {
   const productMap = new Map(products.map((p) => [p.id, p]));
 
   const perProduct = new Map<string, ProductBreakdown>();
   const ensure = (pid: string): ProductBreakdown => {
     let row = perProduct.get(pid);
     if (!row) {
-      row = { productId: pid, productName: productMap.get(pid)?.name ?? "Unknown", unitsPurchased: 0, totalCost: 0, avgCost: 0, unitsSold: 0, unitsUsed: 0, cogs: 0 };
+      row = { productId: pid, productName: productMap.get(pid)?.name ?? "Unknown", unitsPurchased: 0, totalCost: 0, avgCost: 0, unitsSold: 0, unitsUsed: 0, invIncrease: 0, invDecrease: 0, cogs: 0 };
       perProduct.set(pid, row);
     }
     return row;
@@ -185,6 +185,14 @@ export function computeReport({ settings, stock, stockItems, revenue, revenueIte
     row.totalCost += Number(it.total_cost);
   });
   perProduct.forEach((row) => { row.avgCost = row.unitsPurchased > 0 ? row.totalCost / row.unitsPurchased : 0; });
+
+  // All-time inventory adjustments affect inventory on hand
+  inventoryAdjustments.forEach((it) => {
+    if (end && it.date && it.date > end) return;
+    const row = ensure(it.product_id);
+    if (it.type === "increase") row.invIncrease += Number(it.quantity);
+    else row.invDecrease += Number(it.quantity);
+  });
 
   const periodic = settings?.sales_tracking_mode === "periodic";
   if (periodic) {
@@ -226,8 +234,13 @@ export function computeReport({ settings, stock, stockItems, revenue, revenueIte
   const expensesTotal = expenses.filter((e) => inRange(e.date, start, end)).reduce((a, e) => a + Number(e.amount), 0);
   const stockOutflow = stock.filter((s) => inRange(s.date, start, end)).reduce((a, s) => a + Number(s.total_cost), 0);
 
+  // Inventory adjustments (period) — non-cash P&L items
+  const periodInvAdj = inventoryAdjustments.filter((c) => inRange(c.date, start, end));
+  const inventoryLossPeriod = periodInvAdj.filter((c) => c.type === "decrease").reduce((a, c) => a + Number(c.quantity) * Number(c.unit_cost), 0);
+  const inventoryGainPeriod = periodInvAdj.filter((c) => c.type === "increase").reduce((a, c) => a + Number(c.quantity) * Number(c.unit_cost), 0);
+
   // Marketing inventory cost is a P&L expense but does NOT touch cash (already paid via stock)
-  const expensesForPnl = expensesTotal + marketingInventoryCost;
+  const expensesForPnl = expensesTotal + marketingInventoryCost + inventoryLossPeriod - inventoryGainPeriod;
 
   const grossProfit = revenueTotal - cogs;
   const netProfit = grossProfit - expensesForPnl;
@@ -258,6 +271,7 @@ export function computeReport({ settings, stock, stockItems, revenue, revenueIte
     inflows: cashReceived + adjSurplusPeriod, outflows: expensesTotal + stockOutflow + adjShortagePeriod,
     netCashFlow: cashReceived - expensesTotal - stockOutflow + adjustmentsNetPeriod,
     cashAdjustmentsShortage: adjShortagePeriod, cashAdjustmentsSurplus: adjSurplusPeriod, cashAdjustmentsNet: adjustmentsNetPeriod,
+    inventoryLoss: inventoryLossPeriod, inventoryGain: inventoryGainPeriod, inventoryAdjustmentNet: inventoryGainPeriod - inventoryLossPeriod,
     cash, walletBalance, walletPeriod, allTimeEarned, allTimeReceived,
     breakdown,
   };
