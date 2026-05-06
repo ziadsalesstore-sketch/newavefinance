@@ -111,6 +111,16 @@ export function computeReport({ settings, stock, stockItems, revenue, revenueIte
     row.unitsPurchased += Number(it.quantity);
     row.totalCost += Number(it.total_cost);
   });
+  // Seed starting inventory per product into purchase aggregates (affects avg cost & available units)
+  products.forEach((p) => {
+    const sq = Number(p.starting_qty ?? 0);
+    const su = Number(p.starting_unit_cost ?? 0);
+    if (sq > 0) {
+      const row = ensure(p.id);
+      row.unitsPurchased += sq;
+      row.totalCost += sq * su;
+    }
+  });
   perProduct.forEach((row) => { row.avgCost = row.unitsPurchased > 0 ? row.totalCost / row.unitsPurchased : 0; });
 
   // Per-product units sold based on mode
