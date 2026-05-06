@@ -136,8 +136,6 @@ export function MultiItemForm({ mode, onDone }: { mode: Mode; onDone?: () => voi
         </div>
       )}
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
       {!hideUnitsOnPayout && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
@@ -178,6 +176,7 @@ export function MultiItemForm({ mode, onDone }: { mode: Mode; onDone?: () => voi
       {hideUnitsOnPayout && (
         <p className="text-xs text-muted-foreground">Units sold are tracked separately in the Sales Records section (Periodic mode).</p>
       )}
+      <div className="space-y-2"><Label>Notes</Label><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
       <Button type="submit" className="w-full" disabled={busy}>{busy ? "Saving..." : "Save"}</Button>
     </form>
   );
