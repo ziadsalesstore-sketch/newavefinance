@@ -92,6 +92,74 @@ export type Database = {
         }
         Relationships: []
       }
+      opening_balance_items: {
+        Row: {
+          created_at: string
+          id: string
+          opening_balance_id: string
+          product_id: string
+          quantity: number
+          unit_cost: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          opening_balance_id: string
+          product_id: string
+          quantity?: number
+          unit_cost?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          opening_balance_id?: string
+          product_id?: string
+          quantity?: number
+          unit_cost?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opening_balance_items_opening_balance_id_fkey"
+            columns: ["opening_balance_id"]
+            isOneToOne: false
+            referencedRelation: "opening_balances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      opening_balances: {
+        Row: {
+          cash_amount: number
+          created_at: string
+          date: string
+          id: string
+          notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cash_amount?: number
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cash_amount?: number
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       personal_withdrawals: {
         Row: {
           amount: number
@@ -126,6 +194,8 @@ export type Database = {
           id: string
           name: string
           sku: string | null
+          starting_qty: number
+          starting_unit_cost: number
           user_id: string
         }
         Insert: {
@@ -134,6 +204,8 @@ export type Database = {
           id?: string
           name: string
           sku?: string | null
+          starting_qty?: number
+          starting_unit_cost?: number
           user_id: string
         }
         Update: {
@@ -142,6 +214,8 @@ export type Database = {
           id?: string
           name?: string
           sku?: string | null
+          starting_qty?: number
+          starting_unit_cost?: number
           user_id?: string
         }
         Relationships: []

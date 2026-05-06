@@ -12,6 +12,8 @@ export type SalesRecord = { id: string; start_date: string; end_date: string; un
 export type SalesItem = { id: string; sales_record_id: string; product_id: string; units_sold: number; end_date?: string };
 export type Transaction = { id: string; date: string; type: string; category: string | null; amount: number; notes: string | null; };
 export type GeneralReceivedPayment = { id: string; date: string; amount: number; note: string | null; };
+export type OpeningBalance = { id: string; date: string; cash_amount: number; notes: string | null; };
+export type OpeningBalanceItem = { id: string; opening_balance_id: string; product_id: string; quantity: number; unit_cost: number; };
 
 const fetchAll = <T,>(table: string, order = "date") => async (): Promise<T[]> => {
   const { data, error } = await supabase.from(table as any).select("*").order(order, { ascending: false });
@@ -35,6 +37,20 @@ export const useExpenses = () => useQuery({ queryKey: ["expenses"], queryFn: fet
 export const useSalesRecords = () => useQuery({ queryKey: ["sales"], queryFn: fetchAll<SalesRecord>("sales_records", "end_date") });
 export const useTransactions = () => useQuery({ queryKey: ["transactions"], queryFn: fetchAll<Transaction>("transactions") });
 export const useGeneralReceivedPayments = () => useQuery({ queryKey: ["general_received"], queryFn: fetchAll<GeneralReceivedPayment>("general_received_payments") });
+
+export const useOpeningBalance = () => useQuery({
+  queryKey: ["opening_balance"],
+  queryFn: async (): Promise<OpeningBalance | null> => {
+    const { data, error } = await supabase.from("opening_balances" as any).select("*").maybeSingle();
+    if (error) throw error;
+    return (data as any) ?? null;
+  },
+});
+
+export const useOpeningBalanceItems = () => useQuery({
+  queryKey: ["opening_balance_items"],
+  queryFn: fetchAll<OpeningBalanceItem>("opening_balance_items", "created_at"),
+});
 
 export const useStockPurchaseItems = () => useQuery({
   queryKey: ["stock_items"],
@@ -77,6 +93,8 @@ export type ReportInputs = {
   salesItems: SalesItem[];
   products: Product[];
   generalReceived?: GeneralReceivedPayment[];
+  openingBalance?: OpeningBalance | null;
+  openingItems?: OpeningBalanceItem[];
   start?: string;
   end?: string;
 };
@@ -91,7 +109,7 @@ export type ProductBreakdown = {
   cogs: number;
 };
 
-export function computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived = [], start, end }: ReportInputs) {
+export function computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived = [], openingBalance = null, openingItems = [], start, end }: ReportInputs) {
   const productMap = new Map(products.map((p) => [p.id, p]));
 
   // Per-product purchase aggregates (up to end date) — fall back to all if no end
@@ -104,6 +122,13 @@ export function computeReport({ settings, stock, stockItems, revenue, revenueIte
     }
     return row;
   };
+
+  // Opening inventory items count as initial purchases for cost averaging
+  openingItems.forEach((it) => {
+    const row = ensure(it.product_id);
+    row.unitsPurchased += Number(it.quantity);
+    row.totalCost += Number(it.quantity) * Number(it.unit_cost);
+  });
 
   stockItems.forEach((it) => {
     if (end && it.date && it.date > end) return;
@@ -157,7 +182,8 @@ export function computeReport({ settings, stock, stockItems, revenue, revenueIte
     + generalReceived.reduce((a, g) => a + Number(g.amount), 0);
   const allTimeExpenses = expenses.reduce((a, e) => a + Number(e.amount), 0);
   const allTimeStock = stock.reduce((a, s) => a + Number(s.total_cost), 0);
-  const cash = Number(settings?.starting_cash ?? 0) + allTimeReceived - allTimeExpenses - allTimeStock;
+  const openingCash = Number(openingBalance?.cash_amount ?? 0);
+  const cash = openingCash + Number(settings?.starting_cash ?? 0) + allTimeReceived - allTimeExpenses - allTimeStock;
   const walletBalance = allTimeEarned - allTimeReceived;
 
   return {

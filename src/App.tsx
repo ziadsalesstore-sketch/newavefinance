@@ -15,6 +15,7 @@ import SalesPage from "./pages/SalesPage";
 import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
 import WithdrawalsPage from "./pages/WithdrawalsPage";
+import OpeningBalancePage from "./pages/OpeningBalancePage";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route element={<AppLayout />}>
               <Route path="/" element={<Dashboard />} />
+              <Route path="/opening-balance" element={<OpeningBalancePage />} />
               <Route path="/transactions" element={<TransactionsPage />} />
               <Route path="/products" element={<ProductsPage />} />
               <Route path="/stock" element={<StockPage />} />

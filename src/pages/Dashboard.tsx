@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useSettings, useStockPurchases, useRevenuePayouts, useExpenses, useSalesRecords, useTransactions, useStockPurchaseItems, useSalesItems, useRevenueItems, useProducts, useGeneralReceivedPayments, computeReport, fmt } from "@/hooks/useFinance";
+import { useSettings, useStockPurchases, useRevenuePayouts, useExpenses, useSalesRecords, useTransactions, useStockPurchaseItems, useSalesItems, useRevenueItems, useProducts, useGeneralReceivedPayments, useOpeningBalance, useOpeningBalanceItems, computeReport, fmt } from "@/hooks/useFinance";
 import { MetricCard } from "@/components/MetricCard";
 import { Wallet, TrendingUp, Receipt, LineChart as LineIcon, Banknote, Truck, Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -19,10 +19,12 @@ export default function Dashboard() {
   const { data: revenueItems = [] } = useRevenueItems();
   const { data: products = [] } = useProducts();
   const { data: generalReceived = [] } = useGeneralReceivedPayments();
+  const { data: openingBalance = null } = useOpeningBalance();
+  const { data: openingItems = [] } = useOpeningBalanceItems();
 
   const report = useMemo(
-    () => settings ? computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived }) : null,
-    [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived]
+    () => settings ? computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems }) : null,
+    [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems]
   );
 
   const expensesByCategory = useMemo(() => {

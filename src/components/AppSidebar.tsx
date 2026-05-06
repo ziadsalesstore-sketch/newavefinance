@@ -1,11 +1,12 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, ArrowLeftRight, Package, TrendingUp, Receipt, BarChart3, FileText, Settings as SettingsIcon, LogOut, Boxes, Wallet } from "lucide-react";
+import { LayoutDashboard, ArrowLeftRight, Package, TrendingUp, Receipt, BarChart3, FileText, Settings as SettingsIcon, LogOut, Boxes, Wallet, Coins } from "lucide-react";
 import logo from "@/assets/logo.jpg";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/useAuth";
 
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Opening Balance", url: "/opening-balance", icon: Coins },
   { title: "Transactions", url: "/transactions", icon: ArrowLeftRight },
   { title: "Products", url: "/products", icon: Boxes },
   { title: "Stock", url: "/stock", icon: Package },
