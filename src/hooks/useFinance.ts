@@ -38,6 +38,20 @@ export const useSalesRecords = () => useQuery({ queryKey: ["sales"], queryFn: fe
 export const useTransactions = () => useQuery({ queryKey: ["transactions"], queryFn: fetchAll<Transaction>("transactions") });
 export const useGeneralReceivedPayments = () => useQuery({ queryKey: ["general_received"], queryFn: fetchAll<GeneralReceivedPayment>("general_received_payments") });
 
+export const useOpeningBalance = () => useQuery({
+  queryKey: ["opening_balance"],
+  queryFn: async (): Promise<OpeningBalance | null> => {
+    const { data, error } = await supabase.from("opening_balances" as any).select("*").maybeSingle();
+    if (error) throw error;
+    return (data as any) ?? null;
+  },
+});
+
+export const useOpeningBalanceItems = () => useQuery({
+  queryKey: ["opening_balance_items"],
+  queryFn: fetchAll<OpeningBalanceItem>("opening_balance_items", "created_at"),
+});
+
 export const useStockPurchaseItems = () => useQuery({
   queryKey: ["stock_items"],
   queryFn: async (): Promise<StockPurchaseItem[]> => {
