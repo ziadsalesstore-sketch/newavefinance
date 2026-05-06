@@ -203,9 +203,10 @@ export default function AdjustmentsPage() {
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-1" />New Adjustment</Button>
           </DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>New adjustment</DialogTitle></DialogHeader>
-            <form onSubmit={submit} className="space-y-4">
+          <DialogContent className="max-h-[90vh] p-0 gap-0 flex flex-col">
+            <DialogHeader className="px-6 pt-6 pb-4 border-b shrink-0"><DialogTitle>New adjustment</DialogTitle></DialogHeader>
+            <form onSubmit={submit} className="flex flex-col flex-1 min-h-0">
+              <div className="space-y-4 px-6 py-4 overflow-y-auto flex-1 min-h-0">
               <div className="space-y-2">
                 <Label>Adjustment type</Label>
                 <Select value={adjKind} onValueChange={(v) => setAdjKind(v as any)}>
