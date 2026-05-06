@@ -78,11 +78,13 @@ export function MultiItemForm({ mode, onDone }: { mode: Mode; onDone?: () => voi
         qc.invalidateQueries({ queryKey: ["sales_items"] });
       } else {
         const totalU = valid.reduce((a, it) => a + (Number(it.units_sold) || 0), 0);
-        const { data, error } = await supabase.from("revenue_payouts").insert({ user_id: user.id, date, earned_amount: Number(earned) || 0, received_amount: Number(received) || 0, status, units_sold: totalU || null, notes: notes || null }).select("id").single();
+        const { data, error } = await supabase.from("revenue_payouts").insert({ user_id: user.id, date, earned_amount: Number(earned) || 0, received_amount: Number(received) || 0, status, units_sold: hideUnitsOnPayout ? null : (totalU || null), notes: notes || null }).select("id").single();
         if (error) throw error;
-        const rows = valid.map((it) => ({ user_id: user.id, revenue_payout_id: data.id, product_id: it.product_id, units_sold: Number(it.units_sold) || 0 }));
-        const { error: e2 } = await supabase.from("revenue_payout_items").insert(rows);
-        if (e2) throw e2;
+        if (!hideUnitsOnPayout && valid.length > 0) {
+          const rows = valid.map((it) => ({ user_id: user.id, revenue_payout_id: data.id, product_id: it.product_id, units_sold: Number(it.units_sold) || 0 }));
+          const { error: e2 } = await supabase.from("revenue_payout_items").insert(rows);
+          if (e2) throw e2;
+        }
         qc.invalidateQueries({ queryKey: ["revenue"] });
         qc.invalidateQueries({ queryKey: ["revenue_items"] });
         qc.invalidateQueries({ queryKey: ["transactions"] });
