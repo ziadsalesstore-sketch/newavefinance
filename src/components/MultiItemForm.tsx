@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useProducts } from "@/hooks/useFinance";
+import { useProducts, useSettings } from "@/hooks/useFinance";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,9 @@ export function MultiItemForm({ mode, onDone }: { mode: Mode; onDone?: () => voi
   const { user } = useAuth();
   const qc = useQueryClient();
   const { data: products = [] } = useProducts();
+  const { data: settings } = useSettings();
+  const periodicMode = settings?.sales_tracking_mode === "periodic";
+  const hideUnitsOnPayout = mode === "payout" && periodicMode;
 
   // Parent-level fields
   const [date, setDate] = useState(today());
@@ -47,9 +50,11 @@ export function MultiItemForm({ mode, onDone }: { mode: Mode; onDone?: () => voi
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (products.length === 0) return toast.error("Add a product first");
+    if (mode !== "payout" || !periodicMode) {
+      if (products.length === 0) return toast.error("Add a product first");
+    }
     const valid = items.filter((it) => it.product_id);
-    if (valid.length === 0) return toast.error("Add at least one product line");
+    if ((mode !== "payout" || !periodicMode) && valid.length === 0) return toast.error("Add at least one product line");
 
     setBusy(true);
     try {
@@ -73,11 +78,13 @@ export function MultiItemForm({ mode, onDone }: { mode: Mode; onDone?: () => voi
         qc.invalidateQueries({ queryKey: ["sales_items"] });
       } else {
         const totalU = valid.reduce((a, it) => a + (Number(it.units_sold) || 0), 0);
-        const { data, error } = await supabase.from("revenue_payouts").insert({ user_id: user.id, date, earned_amount: Number(earned) || 0, received_amount: Number(received) || 0, status, units_sold: totalU || null, notes: notes || null }).select("id").single();
+        const { data, error } = await supabase.from("revenue_payouts").insert({ user_id: user.id, date, earned_amount: Number(earned) || 0, received_amount: Number(received) || 0, status, units_sold: hideUnitsOnPayout ? null : (totalU || null), notes: notes || null }).select("id").single();
         if (error) throw error;
-        const rows = valid.map((it) => ({ user_id: user.id, revenue_payout_id: data.id, product_id: it.product_id, units_sold: Number(it.units_sold) || 0 }));
-        const { error: e2 } = await supabase.from("revenue_payout_items").insert(rows);
-        if (e2) throw e2;
+        if (!hideUnitsOnPayout && valid.length > 0) {
+          const rows = valid.map((it) => ({ user_id: user.id, revenue_payout_id: data.id, product_id: it.product_id, units_sold: Number(it.units_sold) || 0 }));
+          const { error: e2 } = await supabase.from("revenue_payout_items").insert(rows);
+          if (e2) throw e2;
+        }
         qc.invalidateQueries({ queryKey: ["revenue"] });
         qc.invalidateQueries({ queryKey: ["revenue_items"] });
         qc.invalidateQueries({ queryKey: ["transactions"] });
@@ -129,42 +136,46 @@ export function MultiItemForm({ mode, onDone }: { mode: Mode; onDone?: () => voi
         </div>
       )}
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label>Products</Label>
-          <Button type="button" size="sm" variant="outline" onClick={addItem}><Plus className="h-3 w-3 mr-1" />Add product</Button>
-        </div>
-        {items.map((it, i) => (
-          <Card key={i} className="p-3 space-y-2">
-            <div className="flex gap-2">
-              <Select value={it.product_id} onValueChange={(v) => updateItem(i, { product_id: v })}>
-                <SelectTrigger className="flex-1"><SelectValue placeholder="Select product..." /></SelectTrigger>
-                <SelectContent>
-                  {products.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              {items.length > 1 && (
-                <Button type="button" size="icon" variant="ghost" onClick={() => removeItem(i)}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              )}
-            </div>
-            {mode === "stock" ? (
-              <div className="grid grid-cols-3 gap-2 items-end">
-                <div><Label className="text-xs">Quantity</Label><Input type="number" step="any" value={it.quantity ?? ""} onChange={(e) => updateItem(i, { quantity: e.target.value })} required /></div>
-                <div><Label className="text-xs">Total cost</Label><Input type="number" step="0.01" value={it.total_cost ?? ""} onChange={(e) => updateItem(i, { total_cost: e.target.value })} required /></div>
-                <div className="text-xs text-muted-foreground pb-2">Cost/unit: <span className="font-medium tabular-nums">{Number(it.quantity) > 0 ? fmt(Number(it.total_cost) / Number(it.quantity)) : "—"}</span></div>
+      {!hideUnitsOnPayout && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label>Products</Label>
+            <Button type="button" size="sm" variant="outline" onClick={addItem}><Plus className="h-3 w-3 mr-1" />Add product</Button>
+          </div>
+          {items.map((it, i) => (
+            <Card key={i} className="p-3 space-y-2">
+              <div className="flex gap-2">
+                <Select value={it.product_id} onValueChange={(v) => updateItem(i, { product_id: v })}>
+                  <SelectTrigger className="flex-1"><SelectValue placeholder="Select product..." /></SelectTrigger>
+                  <SelectContent>
+                    {products.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                {items.length > 1 && (
+                  <Button type="button" size="icon" variant="ghost" onClick={() => removeItem(i)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                )}
               </div>
-            ) : (
-              <div><Label className="text-xs">Units sold</Label><Input type="number" step="any" value={it.units_sold ?? ""} onChange={(e) => updateItem(i, { units_sold: e.target.value })} required /></div>
-            )}
-          </Card>
-        ))}
-        <div className="text-sm text-muted-foreground flex justify-between pt-1">
-          {mode === "stock" ? <><span>Total quantity: <span className="tabular-nums">{totalUnits}</span></span><span>Total cost: <span className="font-semibold tabular-nums text-foreground">{fmt(totalCost)}</span></span></> : <span>Total units: <span className="font-semibold tabular-nums text-foreground">{totalUnits}</span></span>}
+              {mode === "stock" ? (
+                <div className="grid grid-cols-3 gap-2 items-end">
+                  <div><Label className="text-xs">Quantity</Label><Input type="number" step="any" value={it.quantity ?? ""} onChange={(e) => updateItem(i, { quantity: e.target.value })} required /></div>
+                  <div><Label className="text-xs">Total cost</Label><Input type="number" step="0.01" value={it.total_cost ?? ""} onChange={(e) => updateItem(i, { total_cost: e.target.value })} required /></div>
+                  <div className="text-xs text-muted-foreground pb-2">Cost/unit: <span className="font-medium tabular-nums">{Number(it.quantity) > 0 ? fmt(Number(it.total_cost) / Number(it.quantity)) : "—"}</span></div>
+                </div>
+              ) : (
+                <div><Label className="text-xs">Units sold</Label><Input type="number" step="any" value={it.units_sold ?? ""} onChange={(e) => updateItem(i, { units_sold: e.target.value })} required /></div>
+              )}
+            </Card>
+          ))}
+          <div className="text-sm text-muted-foreground flex justify-between pt-1">
+            {mode === "stock" ? <><span>Total quantity: <span className="tabular-nums">{totalUnits}</span></span><span>Total cost: <span className="font-semibold tabular-nums text-foreground">{fmt(totalCost)}</span></span></> : <span>Total units: <span className="font-semibold tabular-nums text-foreground">{totalUnits}</span></span>}
+          </div>
         </div>
-      </div>
-
+      )}
+      {hideUnitsOnPayout && (
+        <p className="text-xs text-muted-foreground">Units sold are tracked separately in the Sales Records section (Periodic mode).</p>
+      )}
       <div className="space-y-2"><Label>Notes</Label><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
       <Button type="submit" className="w-full" disabled={busy}>{busy ? "Saving..." : "Save"}</Button>
     </form>
