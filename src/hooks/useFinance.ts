@@ -54,6 +54,15 @@ export const useOpeningBalanceItems = () => useQuery({
   queryFn: fetchAll<OpeningBalanceItem>("opening_balance_items", "created_at"),
 });
 
+export const usePersonalWithdrawals = () => useQuery({
+  queryKey: ["personal_withdrawals"],
+  queryFn: async (): Promise<{ id: string; date: string; amount: number; note: string | null }[]> => {
+    const { data, error } = await supabase.from("personal_withdrawals" as any).select("*").order("date", { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as any;
+  },
+});
+
 export const useMarketingCampaigns = () => useQuery({
   queryKey: ["marketing_campaigns"],
   queryFn: fetchAll<MarketingCampaign>("marketing_campaigns"),
@@ -112,6 +121,7 @@ export type ReportInputs = {
   openingBalance?: OpeningBalance | null;
   openingItems?: OpeningBalanceItem[];
   marketingItems?: MarketingCampaignItem[];
+  withdrawals?: { date: string; amount: number }[];
   start?: string;
   end?: string;
 };
@@ -127,7 +137,7 @@ export type ProductBreakdown = {
   cogs: number;
 };
 
-export function computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived = [], openingBalance = null, openingItems = [], marketingItems = [], start, end }: ReportInputs) {
+export function computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived = [], openingBalance = null, openingItems = [], marketingItems = [], withdrawals = [], start, end }: ReportInputs) {
   const productMap = new Map(products.map((p) => [p.id, p]));
 
   const perProduct = new Map<string, ProductBreakdown>();
@@ -209,8 +219,9 @@ export function computeReport({ settings, stock, stockItems, revenue, revenueIte
     + generalReceived.reduce((a, g) => a + Number(g.amount), 0);
   const allTimeExpenses = expenses.reduce((a, e) => a + Number(e.amount), 0);
   const allTimeStock = stock.reduce((a, s) => a + Number(s.total_cost), 0);
+  const allTimeWithdrawals = withdrawals.reduce((a, w) => a + Number(w.amount), 0);
   const openingCash = Number(openingBalance?.cash_amount ?? 0);
-  const cash = openingCash + Number(settings?.starting_cash ?? 0) + allTimeReceived - allTimeExpenses - allTimeStock;
+  const cash = openingCash + Number(settings?.starting_cash ?? 0) + allTimeReceived - allTimeExpenses - allTimeStock - allTimeWithdrawals;
   const walletBalance = allTimeEarned - allTimeReceived;
 
   return {

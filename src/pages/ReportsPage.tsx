@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useSettings, useStockPurchases, useRevenuePayouts, useExpenses, useSalesRecords, useStockPurchaseItems, useSalesItems, useRevenueItems, useProducts, useGeneralReceivedPayments, useOpeningBalance, useOpeningBalanceItems, useMarketingCampaignItems, computeReport, fmt } from "@/hooks/useFinance";
+import { useSettings, useStockPurchases, useRevenuePayouts, useExpenses, useSalesRecords, useStockPurchaseItems, useSalesItems, useRevenueItems, useProducts, useGeneralReceivedPayments, useOpeningBalance, useOpeningBalanceItems, useMarketingCampaignItems, usePersonalWithdrawals, computeReport, fmt } from "@/hooks/useFinance";
 import { DateRange } from "@/components/DateRange";
 import { Card } from "@/components/ui/card";
 import { MetricCard } from "@/components/MetricCard";
@@ -19,13 +19,14 @@ export default function ReportsPage() {
   const { data: openingBalance = null } = useOpeningBalance();
   const { data: openingItems = [] } = useOpeningBalanceItems();
   const { data: marketingItems = [] } = useMarketingCampaignItems();
+  const { data: withdrawals = [] } = usePersonalWithdrawals();
 
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
 
   const r = useMemo(
-    () => settings ? computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, start: start || undefined, end: end || undefined }) : null,
-    [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, start, end]
+    () => settings ? computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, withdrawals, start: start || undefined, end: end || undefined }) : null,
+    [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, withdrawals, start, end]
   );
   if (!r) return null;
 
