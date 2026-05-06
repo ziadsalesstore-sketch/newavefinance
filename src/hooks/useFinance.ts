@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export type Settings = { user_id: string; starting_cash: number; sales_tracking_mode: "per_payout" | "periodic"; };
-export type Product = { id: string; name: string; sku: string | null; category: string | null; };
+export type Product = { id: string; name: string; sku: string | null; category: string | null; starting_qty?: number; starting_unit_cost?: number; };
 export type StockPurchase = { id: string; date: string; product_name: string | null; quantity: number; total_cost: number; notes: string | null; };
 export type StockPurchaseItem = { id: string; stock_purchase_id: string; product_id: string; quantity: number; total_cost: number; date?: string };
 export type RevenuePayout = { id: string; date: string; earned_amount: number; received_amount: number; status: string; units_sold: number | null; notes: string | null; };
