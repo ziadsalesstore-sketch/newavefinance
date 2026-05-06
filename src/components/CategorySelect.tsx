@@ -97,9 +97,9 @@ export function CategorySelect({ value, onChange }: { value: string; onChange: (
             }}
           />
         </div>
-        <div className="max-h-[250px] overflow-y-auto py-1">
+        <div className="max-h-[180px] overflow-y-auto py-1">
           {filtered.length === 0 ? (
-            <div className="px-3 py-6 text-center text-sm text-muted-foreground">
+            <div className="px-3 py-4 text-center text-sm text-muted-foreground">
               No categories found
             </div>
           ) : (
@@ -116,25 +116,19 @@ export function CategorySelect({ value, onChange }: { value: string; onChange: (
             ))
           )}
         </div>
-        {search.trim() && !exactMatch && (
-          <div className="border-t p-1 sticky bottom-0 bg-popover">
-            <button
-              type="button"
-              disabled={busy}
-              onClick={createCategory}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground"
-            >
-              <Plus className="h-4 w-4" /> Create "{search.trim()}"
-            </button>
-          </div>
-        )}
-        {!search.trim() && (
-          <div className="border-t p-1 sticky bottom-0 bg-popover">
-            <div className="px-3 py-1.5 text-xs text-muted-foreground">
-              Type a name to create a new category
-            </div>
-          </div>
-        )}
+        <div className="border-t p-1 sticky bottom-0 bg-popover">
+          <button
+            type="button"
+            disabled={busy || !search.trim() || exactMatch}
+            onClick={createCategory}
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          >
+            <Plus className="h-4 w-4" />
+            {search.trim()
+              ? exactMatch ? "Category already exists" : `Create "${search.trim()}"`
+              : "Type a name above to create a new category"}
+          </button>
+        </div>
       </PopoverContent>
     </Popover>
   );
