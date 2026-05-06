@@ -126,6 +126,8 @@ export type Database = {
           id: string
           name: string
           sku: string | null
+          starting_qty: number
+          starting_unit_cost: number
           user_id: string
         }
         Insert: {
@@ -134,6 +136,8 @@ export type Database = {
           id?: string
           name: string
           sku?: string | null
+          starting_qty?: number
+          starting_unit_cost?: number
           user_id: string
         }
         Update: {
@@ -142,6 +146,8 @@ export type Database = {
           id?: string
           name?: string
           sku?: string | null
+          starting_qty?: number
+          starting_unit_cost?: number
           user_id?: string
         }
         Relationships: []
