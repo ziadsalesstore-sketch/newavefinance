@@ -12,7 +12,6 @@ const items = [
   { title: "Stock", url: "/stock", icon: Package },
   { title: "Revenue", url: "/revenue", icon: TrendingUp },
   { title: "Expenses", url: "/expenses", icon: Receipt },
-  { title: "Marketing", url: "/marketing", icon: Megaphone },
   { title: "Sales", url: "/sales", icon: BarChart3 },
   { title: "Withdrawals", url: "/withdrawals", icon: Wallet },
   { title: "Reports", url: "/reports", icon: FileText },

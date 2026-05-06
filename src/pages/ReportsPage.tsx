@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useSettings, useStockPurchases, useRevenuePayouts, useExpenses, useSalesRecords, useStockPurchaseItems, useSalesItems, useRevenueItems, useProducts, useGeneralReceivedPayments, useOpeningBalance, useOpeningBalanceItems, computeReport, fmt } from "@/hooks/useFinance";
+import { useSettings, useStockPurchases, useRevenuePayouts, useExpenses, useSalesRecords, useStockPurchaseItems, useSalesItems, useRevenueItems, useProducts, useGeneralReceivedPayments, useOpeningBalance, useOpeningBalanceItems, useMarketingCampaignItems, computeReport, fmt } from "@/hooks/useFinance";
 import { DateRange } from "@/components/DateRange";
 import { Card } from "@/components/ui/card";
 import { MetricCard } from "@/components/MetricCard";
@@ -18,13 +18,14 @@ export default function ReportsPage() {
   const { data: generalReceived = [] } = useGeneralReceivedPayments();
   const { data: openingBalance = null } = useOpeningBalance();
   const { data: openingItems = [] } = useOpeningBalanceItems();
+  const { data: marketingItems = [] } = useMarketingCampaignItems();
 
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
 
   const r = useMemo(
-    () => settings ? computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, start: start || undefined, end: end || undefined }) : null,
-    [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, start, end]
+    () => settings ? computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, start: start || undefined, end: end || undefined }) : null,
+    [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, start, end]
   );
   if (!r) return null;
 
@@ -92,7 +93,7 @@ export default function ReportsPage() {
             </TableHeader>
             <TableBody>
               {r.breakdown.map((p) => {
-                const left = p.unitsPurchased - p.unitsSold;
+                const left = p.unitsPurchased - p.unitsSold - (p.unitsUsed ?? 0);
                 return (
                   <TableRow key={p.productId}>
                     <TableCell className="font-medium">{p.productName}</TableCell>
