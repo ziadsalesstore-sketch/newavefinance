@@ -147,7 +147,7 @@ export type ProductBreakdown = {
   cogs: number;
 };
 
-export function computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived = [], openingBalance = null, openingItems = [], marketingItems = [], withdrawals = [], start, end }: ReportInputs) {
+export function computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived = [], openingBalance = null, openingItems = [], marketingItems = [], withdrawals = [], cashAdjustments = [], start, end }: ReportInputs) {
   const productMap = new Map(products.map((p) => [p.id, p]));
 
   const perProduct = new Map<string, ProductBreakdown>();
