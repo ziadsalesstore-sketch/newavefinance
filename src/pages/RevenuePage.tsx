@@ -90,9 +90,9 @@ export default function RevenuePage() {
       </div>
 
       <Card className="overflow-hidden mb-6">
-        {rows.length === 0 ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">No payouts yet.</div>
-        ) : rows.map((r) => {
+        {filteredRows.length === 0 ? (
+          <div className="p-8 text-center text-sm text-muted-foreground">No payouts in this period.</div>
+        ) : filteredRows.map((r) => {
           const lines = items.filter((it) => it.revenue_payout_id === r.id);
           const open = openId === r.id;
           const wallet = Number(r.earned_amount) - Number(r.received_amount);
@@ -133,9 +133,9 @@ export default function RevenuePage() {
         <h2 className="text-lg font-semibold mb-2">Standalone Received Payments</h2>
         <p className="text-xs text-muted-foreground mb-3">Payments received later (e.g. courier payouts). These reduce pending balance without creating new revenue.</p>
         <Card className="overflow-hidden">
-          {generalReceived.length === 0 ? (
-            <div className="p-6 text-center text-sm text-muted-foreground">No standalone payments yet.</div>
-          ) : generalReceived.map((g) => (
+          {filteredGeneral.length === 0 ? (
+            <div className="p-6 text-center text-sm text-muted-foreground">No standalone payments in this period.</div>
+          ) : filteredGeneral.map((g) => (
             <div key={g.id} className="flex items-center justify-between p-4 border-b last:border-0 hover:bg-muted/30">
               <div>
                 <div className="font-medium text-sm">{g.date}</div>
