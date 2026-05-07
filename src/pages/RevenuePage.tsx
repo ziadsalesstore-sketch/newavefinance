@@ -60,7 +60,8 @@ export default function RevenuePage() {
           <h1 className="text-2xl font-bold">Revenue Payouts</h1>
           <p className="text-sm text-muted-foreground">Sales tracking: {showUnits ? "Per Payout (multi-product)" : "Periodic Records"}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap items-center">
+          <DateRangePicker value={range} onChange={setRange} />
           <Dialog open={receivedOpen} onOpenChange={setReceivedOpen}>
             <DialogTrigger asChild>
               <Button variant="outline"><Banknote className="h-4 w-4 mr-1" />Record Received Payment</Button>
