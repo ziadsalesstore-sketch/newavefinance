@@ -182,39 +182,42 @@ export default function ExpensesPage() {
 
   return (
     <div>
-      <div className="flex items-start justify-between gap-4 mb-6">
+      <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold">Expenses</h1>
           <p className="text-sm text-muted-foreground">Cash expenses + inventory-based expenses (PR, giveaways, samples)</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" />Add Expense</Button></DialogTrigger>
-          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>New expense</DialogTitle></DialogHeader>
-            <Tabs defaultValue="cash">
-              <TabsList className="grid grid-cols-2 w-full">
-                <TabsTrigger value="cash">Cash Expense</TabsTrigger>
-                <TabsTrigger value="inventory">Inventory Expense</TabsTrigger>
-              </TabsList>
-              <TabsContent value="cash" className="pt-4">
-                <EntityForm
-                  table="expenses"
-                  invalidate={["expenses", "transactions"]}
-                  fields={[
-                    { name: "date", label: "Date", type: "date" },
-                    { name: "category", label: "Category", type: "custom", render: (v, on) => <CategorySelect value={v ?? ""} onChange={on} /> },
-                    { name: "amount", label: "Amount", type: "number" },
-                    { name: "notes", label: "Notes", type: "textarea" },
-                  ]}
-                  onDone={() => setOpen(false)}
-                />
-              </TabsContent>
-              <TabsContent value="inventory" className="pt-4">
-                <InventoryExpenseForm onDone={() => setOpen(false)} />
-              </TabsContent>
-            </Tabs>
-          </DialogContent>
-        </Dialog>
+        <div className="flex items-center gap-2 flex-wrap">
+          <DateRangePicker value={range} onChange={setRange} />
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" />Add Expense</Button></DialogTrigger>
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+              <DialogHeader><DialogTitle>New expense</DialogTitle></DialogHeader>
+              <Tabs defaultValue="cash">
+                <TabsList className="grid grid-cols-2 w-full">
+                  <TabsTrigger value="cash">Cash Expense</TabsTrigger>
+                  <TabsTrigger value="inventory">Inventory Expense</TabsTrigger>
+                </TabsList>
+                <TabsContent value="cash" className="pt-4">
+                  <EntityForm
+                    table="expenses"
+                    invalidate={["expenses", "transactions"]}
+                    fields={[
+                      { name: "date", label: "Date", type: "date" },
+                      { name: "category", label: "Category", type: "custom", render: (v, on) => <CategorySelect value={v ?? ""} onChange={on} /> },
+                      { name: "amount", label: "Amount", type: "number" },
+                      { name: "notes", label: "Notes", type: "textarea" },
+                    ]}
+                    onDone={() => setOpen(false)}
+                  />
+                </TabsContent>
+                <TabsContent value="inventory" className="pt-4">
+                  <InventoryExpenseForm onDone={() => setOpen(false)} />
+                </TabsContent>
+              </Tabs>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <h3 className="font-semibold text-sm mb-2">Cash expenses</h3>
