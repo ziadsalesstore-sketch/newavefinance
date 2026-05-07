@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSalesRecords, useSalesItems, useSettings, useProducts } from "@/hooks/useFinance";
@@ -7,6 +7,7 @@ import { MultiItemForm } from "@/components/MultiItemForm";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight, Trash2 } from "lucide-react";
+import { DateRangePicker, useDateRange, inDateRange } from "@/components/DateRangePicker";
 import { toast } from "sonner";
 
 export default function SalesPage() {
