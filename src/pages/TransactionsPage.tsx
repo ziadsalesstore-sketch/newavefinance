@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Pencil, Trash2 } from "lucide-react";
+import { DateRangePicker, useDateRange, inDateRange } from "@/components/DateRangePicker";
 import { toast } from "sonner";
 
 // Maps a transaction's source_table to its column names + which fields are editable.
@@ -39,8 +40,10 @@ export default function TransactionsPage() {
   const { data: rows = [] } = useTransactions();
   const qc = useQueryClient();
   const [sortBy, setSortBy] = useState<"date_desc" | "date_asc" | "amount_desc" | "amount_asc">("date_desc");
+  const { range, setRange } = useDateRange();
 
-  const sortedRows = [...rows].sort((a, b) => {
+  const filteredRows = rows.filter((r) => inDateRange(r.date, range));
+  const sortedRows = [...filteredRows].sort((a, b) => {
     switch (sortBy) {
       case "date_asc": return a.date.localeCompare(b.date);
       case "amount_desc": return Number(b.amount) - Number(a.amount);
