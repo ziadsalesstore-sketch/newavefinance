@@ -15,6 +15,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Plus, Trash2, AlertCircle } from "lucide-react";
+import { DateRangePicker, useDateRange, inDateRange } from "@/components/DateRangePicker";
 import { toast } from "sonner";
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -168,13 +169,16 @@ export default function ExpensesPage() {
   const { data: products = [] } = useProducts();
   const productMap = new Map(products.map((p) => [p.id, p.name]));
   const [open, setOpen] = useState(false);
+  const { range, setRange } = useDateRange();
 
-  const inventoryRows = useMemo(() => campaigns.map((c) => {
+  const filteredCash = useMemo(() => cashRows.filter((r) => inDateRange(r.date, range)), [cashRows, range]);
+
+  const inventoryRows = useMemo(() => campaigns.filter((c) => inDateRange(c.date, range)).map((c) => {
     const cItems = items.filter((it) => it.campaign_id === c.id);
     const total = cItems.reduce((a, it) => a + Number(it.quantity) * Number(it.unit_cost), 0);
     const desc = cItems.map((it) => `${productMap.get(it.product_id) ?? "?"} ×${it.quantity}`).join(", ");
     return { id: c.id, date: c.date, category: c.notes?.split(" — ")[0] ?? "Inventory Expense", products: desc, amount: total, notes: c.notes };
-  }), [campaigns, items, productMap]);
+  }), [campaigns, items, productMap, range]);
 
   return (
     <div>
