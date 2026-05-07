@@ -173,8 +173,8 @@ export default function TransactionsPage() {
                 </TableRow>
               );
             })}
-            {rows.length === 0 && (
-              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No transactions yet</TableCell></TableRow>
+            {sortedRows.length === 0 && (
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No transactions in this period</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
