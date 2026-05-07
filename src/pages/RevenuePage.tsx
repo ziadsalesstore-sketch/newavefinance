@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ChevronDown, ChevronRight, Plus, Trash2, Banknote } from "lucide-react";
+import { DateRangePicker, useDateRange, inDateRange } from "@/components/DateRangePicker";
 import { toast } from "sonner";
 
 export default function RevenuePage() {
@@ -24,13 +25,17 @@ export default function RevenuePage() {
   const [receivedOpen, setReceivedOpen] = useState(false);
   const qc = useQueryClient();
 
+  const { range, setRange } = useDateRange();
+  const filteredRows = useMemo(() => rows.filter((r) => inDateRange(r.date, range)), [rows, range]);
+  const filteredGeneral = useMemo(() => generalReceived.filter((g) => inDateRange(g.date, range)), [generalReceived, range]);
+
   const totals = useMemo(() => {
-    const earned = rows.reduce((a, r) => a + Number(r.earned_amount), 0);
-    const linkedReceived = rows.reduce((a, r) => a + Number(r.received_amount), 0);
-    const generalTotal = generalReceived.reduce((a, g) => a + Number(g.amount), 0);
+    const earned = filteredRows.reduce((a, r) => a + Number(r.earned_amount), 0);
+    const linkedReceived = filteredRows.reduce((a, r) => a + Number(r.received_amount), 0);
+    const generalTotal = filteredGeneral.reduce((a, g) => a + Number(g.amount), 0);
     const received = linkedReceived + generalTotal;
     return { earned, received, wallet: earned - received };
-  }, [rows, generalReceived]);
+  }, [filteredRows, filteredGeneral]);
 
   const del = async (id: string) => {
     if (!confirm("Delete this payout?")) return;
