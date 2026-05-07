@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import * as XLSX from "xlsx";
 import { useSettings, useStockPurchases, useRevenuePayouts, useExpenses, useSalesRecords, useStockPurchaseItems, useSalesItems, useRevenueItems, useProducts, useGeneralReceivedPayments, useOpeningBalance, useOpeningBalanceItems, useMarketingCampaignItems, usePersonalWithdrawals, useCashAdjustments, useInventoryAdjustments, computeReport, fmt } from "@/hooks/useFinance";
-import { DateRange } from "@/components/DateRange";
+import { DateRangePicker, useDateRange } from "@/components/DateRangePicker";
 import { Card } from "@/components/ui/card";
 import { MetricCard } from "@/components/MetricCard";
 import { Button } from "@/components/ui/button";
@@ -26,8 +26,9 @@ export default function ReportsPage() {
   const { data: cashAdjustments = [] } = useCashAdjustments();
   const { data: inventoryAdjustments = [] } = useInventoryAdjustments();
 
-  const [start, setStart] = useState("");
-  const [end, setEnd] = useState("");
+  const { range, setRange } = useDateRange();
+  const start = range.start;
+  const end = range.end;
 
   const r = useMemo(
     () => settings ? computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, withdrawals, cashAdjustments, inventoryAdjustments, start: start || undefined, end: end || undefined }) : null,
@@ -194,7 +195,7 @@ export default function ReportsPage() {
           <Download className="h-4 w-4 mr-2" /> Export All to Excel
         </Button>
       </div>
-      <DateRange start={start} end={end} onChange={(s, e) => { setStart(s); setEnd(e); }} />
+      <DateRangePicker value={range} onChange={setRange} />
 
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <MetricCard label="Revenue (Earned)" value={fmt(r.revenue)} />

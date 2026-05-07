@@ -4,6 +4,7 @@ import { MetricCard } from "@/components/MetricCard";
 import { Wallet, TrendingUp, Receipt, LineChart as LineIcon, Banknote, Truck, Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, LineChart, Line } from "recharts";
+import { DateRangePicker, useDateRange, inDateRange } from "@/components/DateRangePicker";
 
 const COLORS = ["hsl(158 64% 38%)", "hsl(217 91% 55%)", "hsl(38 92% 50%)", "hsl(280 70% 55%)", "hsl(0 72% 51%)", "hsl(180 60% 40%)"];
 
@@ -26,34 +27,45 @@ export default function Dashboard() {
   const { data: cashAdjustments = [] } = useCashAdjustments();
   const { data: inventoryAdjustments = [] } = useInventoryAdjustments();
 
+  const { range, setRange } = useDateRange();
+  const start = range.start || undefined;
+  const end = range.end || undefined;
+
   const report = useMemo(
-    () => settings ? computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, withdrawals, cashAdjustments, inventoryAdjustments }) : null,
-    [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, withdrawals, cashAdjustments, inventoryAdjustments]
+    () => settings ? computeReport({ settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, withdrawals, cashAdjustments, inventoryAdjustments, start, end }) : null,
+    [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, withdrawals, cashAdjustments, inventoryAdjustments, start, end]
   );
+
+  const expensesInRange = useMemo(() => expenses.filter((e) => inDateRange(e.date, range)), [expenses, range]);
+  const revenueInRange = useMemo(() => revenue.filter((r) => inDateRange(r.date, range)), [revenue, range]);
+  const txsInRange = useMemo(() => txs.filter((t) => inDateRange(t.date, range)), [txs, range]);
 
   const expensesByCategory = useMemo(() => {
     const map = new Map<string, number>();
-    expenses.forEach((e) => map.set(e.category, (map.get(e.category) ?? 0) + Number(e.amount)));
+    expensesInRange.forEach((e) => map.set(e.category, (map.get(e.category) ?? 0) + Number(e.amount)));
     return Array.from(map, ([name, value]) => ({ name, value }));
-  }, [expenses]);
+  }, [expensesInRange]);
 
   const monthly = useMemo(() => {
     const map = new Map<string, { month: string; revenue: number; expenses: number; profit: number }>();
     const get = (k: string) => map.get(k) ?? { month: k, revenue: 0, expenses: 0, profit: 0 };
-    revenue.forEach((r) => { const k = r.date.slice(0, 7); const v = get(k); v.revenue += Number(r.earned_amount); map.set(k, v); });
-    expenses.forEach((e) => { const k = e.date.slice(0, 7); const v = get(k); v.expenses += Number(e.amount); map.set(k, v); });
+    revenueInRange.forEach((r) => { const k = r.date.slice(0, 7); const v = get(k); v.revenue += Number(r.earned_amount); map.set(k, v); });
+    expensesInRange.forEach((e) => { const k = e.date.slice(0, 7); const v = get(k); v.expenses += Number(e.amount); map.set(k, v); });
     const arr = Array.from(map.values()).sort((a, b) => a.month.localeCompare(b.month));
     arr.forEach((v) => v.profit = v.revenue - v.expenses);
     return arr;
-  }, [revenue, expenses]);
+  }, [revenueInRange, expensesInRange]);
 
   if (!report) return <div className="text-muted-foreground">Loading...</div>;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Real-time view of your business finances</p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">Real-time view of your business finances</p>
+        </div>
+        <DateRangePicker value={range} onChange={setRange} />
       </div>
 
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
@@ -127,7 +139,7 @@ export default function Dashboard() {
       <Card className="p-5">
         <h3 className="font-semibold mb-4">Recent Activity</h3>
         <div className="space-y-2">
-          {txs.slice(0, 8).map((t) => (
+          {txsInRange.slice(0, 8).map((t) => (
             <div key={t.id} className="flex items-center justify-between py-2 border-b last:border-0">
               <div>
                 <div className="font-medium text-sm">{t.type}{t.category ? ` · ${t.category}` : ""}</div>
@@ -138,7 +150,7 @@ export default function Dashboard() {
               </div>
             </div>
           ))}
-          {txs.length === 0 && <p className="text-sm text-muted-foreground">No activity yet. Add your first stock purchase, revenue, or expense.</p>}
+          {txsInRange.length === 0 && <p className="text-sm text-muted-foreground">No activity in this period.</p>}
         </div>
       </Card>
     </div>
