@@ -19,6 +19,8 @@ export default function SalesPage() {
   const productMap = new Map(products.map((p) => [p.id, p.name]));
   const [openId, setOpenId] = useState<string | null>(null);
   const qc = useQueryClient();
+  const { range, setRange } = useDateRange();
+  const filteredRows = useMemo(() => rows.filter((r) => inDateRange(r.end_date, range) || inDateRange(r.start_date, range)), [rows, range]);
 
   const del = async (id: string) => {
     if (!confirm("Delete this sales record?")) return;
@@ -35,6 +37,8 @@ export default function SalesPage() {
         <MultiItemForm mode="sales" />
       </PageHeader>
 
+      <div className="mb-4 flex justify-end"><DateRangePicker value={range} onChange={setRange} /></div>
+
       {!periodic && (
         <Card className="p-4 mb-4 border-warning/30 bg-warning/5 text-sm">
           Sales tracking mode is currently <strong>Per Revenue Payout</strong>. These records won't be used in COGS until you switch the mode in Settings.
@@ -42,9 +46,9 @@ export default function SalesPage() {
       )}
 
       <Card className="overflow-hidden">
-        {rows.length === 0 ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">No sales records yet.</div>
-        ) : rows.map((r) => {
+        {filteredRows.length === 0 ? (
+          <div className="p-8 text-center text-sm text-muted-foreground">No sales records in this period.</div>
+        ) : filteredRows.map((r) => {
           const lines = items.filter((it) => it.sales_record_id === r.id);
           const open = openId === r.id;
           return (
