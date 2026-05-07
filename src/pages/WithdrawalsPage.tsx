@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Trash2 } from "lucide-react";
+import { DateRangePicker, useDateRange, inDateRange } from "@/components/DateRangePicker";
 import { toast } from "sonner";
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -35,7 +36,9 @@ export default function WithdrawalsPage() {
     },
   });
 
-  const total = useMemo(() => rows.reduce((a, r) => a + Number(r.amount), 0), [rows]);
+  const { range, setRange } = useDateRange();
+  const filteredRows = useMemo(() => rows.filter((r) => inDateRange(r.date, range)), [rows, range]);
+  const total = useMemo(() => filteredRows.reduce((a, r) => a + Number(r.amount), 0), [filteredRows]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,10 +74,12 @@ export default function WithdrawalsPage() {
           <h1 className="text-2xl font-bold">Personal Withdrawals</h1>
           <p className="text-sm text-muted-foreground">Money taken out of the business for personal use</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button><Plus className="h-4 w-4 mr-1" />Record Withdrawal</Button>
-          </DialogTrigger>
+        <div className="flex items-center gap-2 flex-wrap">
+          <DateRangePicker value={range} onChange={setRange} />
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button><Plus className="h-4 w-4 mr-1" />Record Withdrawal</Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>New personal withdrawal</DialogTitle></DialogHeader>
             <form onSubmit={submit} className="space-y-4">
@@ -93,18 +98,19 @@ export default function WithdrawalsPage() {
               <Button type="submit" className="w-full" disabled={busy}>{busy ? "Saving..." : "Save"}</Button>
             </form>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 mb-4">
         <MetricCard label="Total Withdrawn" value={fmt(total)} />
-        <MetricCard label="Number of Withdrawals" value={String(rows.length)} />
+        <MetricCard label="Number of Withdrawals" value={String(filteredRows.length)} />
       </div>
 
       <Card className="overflow-hidden">
-        {rows.length === 0 ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">No withdrawals yet.</div>
-        ) : rows.map((w) => (
+        {filteredRows.length === 0 ? (
+          <div className="p-8 text-center text-sm text-muted-foreground">No withdrawals in this period.</div>
+        ) : filteredRows.map((w) => (
           <div key={w.id} className="flex items-center justify-between p-4 border-b last:border-0 hover:bg-muted/30">
             <div>
               <div className="font-medium text-sm">{w.date}</div>

@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Pencil, Trash2 } from "lucide-react";
+import { DateRangePicker, useDateRange, inDateRange } from "@/components/DateRangePicker";
 import { toast } from "sonner";
 
 // Maps a transaction's source_table to its column names + which fields are editable.
@@ -39,8 +40,10 @@ export default function TransactionsPage() {
   const { data: rows = [] } = useTransactions();
   const qc = useQueryClient();
   const [sortBy, setSortBy] = useState<"date_desc" | "date_asc" | "amount_desc" | "amount_asc">("date_desc");
+  const { range, setRange } = useDateRange();
 
-  const sortedRows = [...rows].sort((a, b) => {
+  const filteredRows = rows.filter((r) => inDateRange(r.date, range));
+  const sortedRows = [...filteredRows].sort((a, b) => {
     switch (sortBy) {
       case "date_asc": return a.date.localeCompare(b.date);
       case "amount_desc": return Number(b.amount) - Number(a.amount);
@@ -119,17 +122,20 @@ export default function TransactionsPage() {
           <h1 className="text-2xl font-bold">Transactions</h1>
           <p className="text-sm text-muted-foreground">Auto-generated ledger of all financial activity. Edits sync back to the source entry.</p>
         </div>
-        <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Sort by</Label>
-          <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
-            <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="date_desc">Date (Newest First)</SelectItem>
-              <SelectItem value="date_asc">Date (Oldest First)</SelectItem>
-              <SelectItem value="amount_desc">Value (Highest First)</SelectItem>
-              <SelectItem value="amount_asc">Value (Lowest First)</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex items-end gap-3 flex-wrap">
+          <DateRangePicker value={range} onChange={setRange} />
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Sort by</Label>
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+              <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="date_desc">Date (Newest First)</SelectItem>
+                <SelectItem value="date_asc">Date (Oldest First)</SelectItem>
+                <SelectItem value="amount_desc">Value (Highest First)</SelectItem>
+                <SelectItem value="amount_asc">Value (Lowest First)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
       <Card className="overflow-hidden">
@@ -167,8 +173,8 @@ export default function TransactionsPage() {
                 </TableRow>
               );
             })}
-            {rows.length === 0 && (
-              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No transactions yet</TableCell></TableRow>
+            {sortedRows.length === 0 && (
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No transactions in this period</TableCell></TableRow>
             )}
           </TableBody>
         </Table>

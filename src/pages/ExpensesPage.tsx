@@ -15,6 +15,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Plus, Trash2, AlertCircle } from "lucide-react";
+import { DateRangePicker, useDateRange, inDateRange } from "@/components/DateRangePicker";
 import { toast } from "sonner";
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -168,54 +169,60 @@ export default function ExpensesPage() {
   const { data: products = [] } = useProducts();
   const productMap = new Map(products.map((p) => [p.id, p.name]));
   const [open, setOpen] = useState(false);
+  const { range, setRange } = useDateRange();
 
-  const inventoryRows = useMemo(() => campaigns.map((c) => {
+  const filteredCash = useMemo(() => cashRows.filter((r) => inDateRange(r.date, range)), [cashRows, range]);
+
+  const inventoryRows = useMemo(() => campaigns.filter((c) => inDateRange(c.date, range)).map((c) => {
     const cItems = items.filter((it) => it.campaign_id === c.id);
     const total = cItems.reduce((a, it) => a + Number(it.quantity) * Number(it.unit_cost), 0);
     const desc = cItems.map((it) => `${productMap.get(it.product_id) ?? "?"} ×${it.quantity}`).join(", ");
     return { id: c.id, date: c.date, category: c.notes?.split(" — ")[0] ?? "Inventory Expense", products: desc, amount: total, notes: c.notes };
-  }), [campaigns, items, productMap]);
+  }), [campaigns, items, productMap, range]);
 
   return (
     <div>
-      <div className="flex items-start justify-between gap-4 mb-6">
+      <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold">Expenses</h1>
           <p className="text-sm text-muted-foreground">Cash expenses + inventory-based expenses (PR, giveaways, samples)</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" />Add Expense</Button></DialogTrigger>
-          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>New expense</DialogTitle></DialogHeader>
-            <Tabs defaultValue="cash">
-              <TabsList className="grid grid-cols-2 w-full">
-                <TabsTrigger value="cash">Cash Expense</TabsTrigger>
-                <TabsTrigger value="inventory">Inventory Expense</TabsTrigger>
-              </TabsList>
-              <TabsContent value="cash" className="pt-4">
-                <EntityForm
-                  table="expenses"
-                  invalidate={["expenses", "transactions"]}
-                  fields={[
-                    { name: "date", label: "Date", type: "date" },
-                    { name: "category", label: "Category", type: "custom", render: (v, on) => <CategorySelect value={v ?? ""} onChange={on} /> },
-                    { name: "amount", label: "Amount", type: "number" },
-                    { name: "notes", label: "Notes", type: "textarea" },
-                  ]}
-                  onDone={() => setOpen(false)}
-                />
-              </TabsContent>
-              <TabsContent value="inventory" className="pt-4">
-                <InventoryExpenseForm onDone={() => setOpen(false)} />
-              </TabsContent>
-            </Tabs>
-          </DialogContent>
-        </Dialog>
+        <div className="flex items-center gap-2 flex-wrap">
+          <DateRangePicker value={range} onChange={setRange} />
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-1" />Add Expense</Button></DialogTrigger>
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+              <DialogHeader><DialogTitle>New expense</DialogTitle></DialogHeader>
+              <Tabs defaultValue="cash">
+                <TabsList className="grid grid-cols-2 w-full">
+                  <TabsTrigger value="cash">Cash Expense</TabsTrigger>
+                  <TabsTrigger value="inventory">Inventory Expense</TabsTrigger>
+                </TabsList>
+                <TabsContent value="cash" className="pt-4">
+                  <EntityForm
+                    table="expenses"
+                    invalidate={["expenses", "transactions"]}
+                    fields={[
+                      { name: "date", label: "Date", type: "date" },
+                      { name: "category", label: "Category", type: "custom", render: (v, on) => <CategorySelect value={v ?? ""} onChange={on} /> },
+                      { name: "amount", label: "Amount", type: "number" },
+                      { name: "notes", label: "Notes", type: "textarea" },
+                    ]}
+                    onDone={() => setOpen(false)}
+                  />
+                </TabsContent>
+                <TabsContent value="inventory" className="pt-4">
+                  <InventoryExpenseForm onDone={() => setOpen(false)} />
+                </TabsContent>
+              </Tabs>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <h3 className="font-semibold text-sm mb-2">Cash expenses</h3>
       <DataTable
-        rows={cashRows}
+        rows={filteredCash}
         table="expenses"
         invalidate={["expenses", "transactions"]}
         columns={[

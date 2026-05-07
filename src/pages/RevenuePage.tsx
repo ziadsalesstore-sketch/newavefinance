@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ChevronDown, ChevronRight, Plus, Trash2, Banknote } from "lucide-react";
+import { DateRangePicker, useDateRange, inDateRange } from "@/components/DateRangePicker";
 import { toast } from "sonner";
 
 export default function RevenuePage() {
@@ -24,13 +25,17 @@ export default function RevenuePage() {
   const [receivedOpen, setReceivedOpen] = useState(false);
   const qc = useQueryClient();
 
+  const { range, setRange } = useDateRange();
+  const filteredRows = useMemo(() => rows.filter((r) => inDateRange(r.date, range)), [rows, range]);
+  const filteredGeneral = useMemo(() => generalReceived.filter((g) => inDateRange(g.date, range)), [generalReceived, range]);
+
   const totals = useMemo(() => {
-    const earned = rows.reduce((a, r) => a + Number(r.earned_amount), 0);
-    const linkedReceived = rows.reduce((a, r) => a + Number(r.received_amount), 0);
-    const generalTotal = generalReceived.reduce((a, g) => a + Number(g.amount), 0);
+    const earned = filteredRows.reduce((a, r) => a + Number(r.earned_amount), 0);
+    const linkedReceived = filteredRows.reduce((a, r) => a + Number(r.received_amount), 0);
+    const generalTotal = filteredGeneral.reduce((a, g) => a + Number(g.amount), 0);
     const received = linkedReceived + generalTotal;
     return { earned, received, wallet: earned - received };
-  }, [rows, generalReceived]);
+  }, [filteredRows, filteredGeneral]);
 
   const del = async (id: string) => {
     if (!confirm("Delete this payout?")) return;
@@ -55,7 +60,8 @@ export default function RevenuePage() {
           <h1 className="text-2xl font-bold">Revenue Payouts</h1>
           <p className="text-sm text-muted-foreground">Sales tracking: {showUnits ? "Per Payout (multi-product)" : "Periodic Records"}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap items-center">
+          <DateRangePicker value={range} onChange={setRange} />
           <Dialog open={receivedOpen} onOpenChange={setReceivedOpen}>
             <DialogTrigger asChild>
               <Button variant="outline"><Banknote className="h-4 w-4 mr-1" />Record Received Payment</Button>
@@ -84,9 +90,9 @@ export default function RevenuePage() {
       </div>
 
       <Card className="overflow-hidden mb-6">
-        {rows.length === 0 ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">No payouts yet.</div>
-        ) : rows.map((r) => {
+        {filteredRows.length === 0 ? (
+          <div className="p-8 text-center text-sm text-muted-foreground">No payouts in this period.</div>
+        ) : filteredRows.map((r) => {
           const lines = items.filter((it) => it.revenue_payout_id === r.id);
           const open = openId === r.id;
           const wallet = Number(r.earned_amount) - Number(r.received_amount);
@@ -127,9 +133,9 @@ export default function RevenuePage() {
         <h2 className="text-lg font-semibold mb-2">Standalone Received Payments</h2>
         <p className="text-xs text-muted-foreground mb-3">Payments received later (e.g. courier payouts). These reduce pending balance without creating new revenue.</p>
         <Card className="overflow-hidden">
-          {generalReceived.length === 0 ? (
-            <div className="p-6 text-center text-sm text-muted-foreground">No standalone payments yet.</div>
-          ) : generalReceived.map((g) => (
+          {filteredGeneral.length === 0 ? (
+            <div className="p-6 text-center text-sm text-muted-foreground">No standalone payments in this period.</div>
+          ) : filteredGeneral.map((g) => (
             <div key={g.id} className="flex items-center justify-between p-4 border-b last:border-0 hover:bg-muted/30">
               <div>
                 <div className="font-medium text-sm">{g.date}</div>
