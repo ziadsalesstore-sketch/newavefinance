@@ -98,7 +98,8 @@ export default function WithdrawalsPage() {
               <Button type="submit" className="w-full" disabled={busy}>{busy ? "Saving..." : "Save"}</Button>
             </form>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 mb-4">
@@ -107,9 +108,9 @@ export default function WithdrawalsPage() {
       </div>
 
       <Card className="overflow-hidden">
-        {rows.length === 0 ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">No withdrawals yet.</div>
-        ) : rows.map((w) => (
+        {filteredRows.length === 0 ? (
+          <div className="p-8 text-center text-sm text-muted-foreground">No withdrawals in this period.</div>
+        ) : filteredRows.map((w) => (
           <div key={w.id} className="flex items-center justify-between p-4 border-b last:border-0 hover:bg-muted/30">
             <div>
               <div className="font-medium text-sm">{w.date}</div>
