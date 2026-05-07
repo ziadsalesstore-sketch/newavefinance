@@ -104,7 +104,7 @@ export default function WithdrawalsPage() {
 
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 mb-4">
         <MetricCard label="Total Withdrawn" value={fmt(total)} />
-        <MetricCard label="Number of Withdrawals" value={String(rows.length)} />
+        <MetricCard label="Number of Withdrawals" value={String(filteredRows.length)} />
       </div>
 
       <Card className="overflow-hidden">
