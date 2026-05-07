@@ -122,17 +122,20 @@ export default function TransactionsPage() {
           <h1 className="text-2xl font-bold">Transactions</h1>
           <p className="text-sm text-muted-foreground">Auto-generated ledger of all financial activity. Edits sync back to the source entry.</p>
         </div>
-        <div className="space-y-1">
-          <Label className="text-xs text-muted-foreground">Sort by</Label>
-          <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
-            <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="date_desc">Date (Newest First)</SelectItem>
-              <SelectItem value="date_asc">Date (Oldest First)</SelectItem>
-              <SelectItem value="amount_desc">Value (Highest First)</SelectItem>
-              <SelectItem value="amount_asc">Value (Lowest First)</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex items-end gap-3 flex-wrap">
+          <DateRangePicker value={range} onChange={setRange} />
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground">Sort by</Label>
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+              <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="date_desc">Date (Newest First)</SelectItem>
+                <SelectItem value="date_asc">Date (Oldest First)</SelectItem>
+                <SelectItem value="amount_desc">Value (Highest First)</SelectItem>
+                <SelectItem value="amount_asc">Value (Lowest First)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
       <Card className="overflow-hidden">
