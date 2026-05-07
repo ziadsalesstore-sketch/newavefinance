@@ -222,7 +222,7 @@ export default function ExpensesPage() {
 
       <h3 className="font-semibold text-sm mb-2">Cash expenses</h3>
       <DataTable
-        rows={cashRows}
+        rows={filteredCash}
         table="expenses"
         invalidate={["expenses", "transactions"]}
         columns={[
