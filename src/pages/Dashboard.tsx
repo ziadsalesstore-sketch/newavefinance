@@ -156,6 +156,20 @@ export default function Dashboard() {
           {txsInRange.length === 0 && <p className="text-sm text-muted-foreground">No activity in this period.</p>}
         </div>
       </Card>
+
+      {budgets.length > 0 && (
+        <Card className="p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Active Budgets</h3>
+            <Link to="/budgets" className="text-xs text-muted-foreground hover:text-foreground">View all →</Link>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {budgets.slice(0, 6).map((b) => (
+              <BudgetCard key={b.id} b={b} expenses={expenses} />
+            ))}
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
