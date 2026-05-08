@@ -15,6 +15,7 @@ const items = [
   { title: "Sales", url: "/sales", icon: BarChart3 },
   { title: "Withdrawals", url: "/withdrawals", icon: Wallet },
   { title: "Adjustments", url: "/adjustments", icon: Scale },
+  { title: "Budgets", url: "/budgets", icon: Target },
   { title: "Reports", url: "/reports", icon: FileText },
   { title: "Settings", url: "/settings", icon: SettingsIcon },
 ];
