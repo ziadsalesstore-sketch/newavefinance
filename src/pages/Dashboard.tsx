@@ -28,6 +28,7 @@ export default function Dashboard() {
   const { data: withdrawals = [] } = usePersonalWithdrawals();
   const { data: cashAdjustments = [] } = useCashAdjustments();
   const { data: inventoryAdjustments = [] } = useInventoryAdjustments();
+  const { data: budgets = [] } = useBudgets();
 
   const { range, setRange } = useDateRange();
   const start = range.start || undefined;
