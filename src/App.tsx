@@ -16,6 +16,7 @@ import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
 import WithdrawalsPage from "./pages/WithdrawalsPage";
 import AdjustmentsPage from "./pages/AdjustmentsPage";
+import BudgetsPage from "./pages/BudgetsPage";
 import OpeningBalancePage from "./pages/OpeningBalancePage";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound.tsx";
@@ -43,6 +44,7 @@ const App = () => (
               <Route path="/withdrawals" element={<WithdrawalsPage />} />
               <Route path="/adjustments" element={<AdjustmentsPage />} />
               <Route path="/cash-adjustments" element={<AdjustmentsPage />} />
+              <Route path="/budgets" element={<BudgetsPage />} />
               <Route path="/reports" element={<ReportsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
