@@ -130,7 +130,7 @@ export default function ReportsPage() {
         Number(p.avgCost.toFixed(2)),
         p.unitsSold,
         Number(p.cogs.toFixed(2)),
-        p.unitsPurchased - p.unitsSold - (p.unitsUsed ?? 0) + (p.invIncrease ?? 0) - (p.invDecrease ?? 0),
+        inventoryLeftAllTime.get(p.productId) ?? 0,
       ]),
     ];
     const ws = XLSX.utils.aoa_to_sheet(rows);
