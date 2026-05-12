@@ -289,7 +289,7 @@ export default function ReportsPage() {
             </TableHeader>
             <TableBody>
               {r.breakdown.map((p) => {
-                const left = p.unitsPurchased - p.unitsSold - (p.unitsUsed ?? 0) + (p.invIncrease ?? 0) - (p.invDecrease ?? 0);
+                const left = inventoryLeftAllTime.get(p.productId) ?? 0;
                 return (
                   <TableRow key={p.productId}>
                     <TableCell className="font-medium">{p.productName}</TableCell>
