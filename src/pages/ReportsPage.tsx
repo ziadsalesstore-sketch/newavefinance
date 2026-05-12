@@ -35,6 +35,21 @@ export default function ReportsPage() {
     [settings, stock, stockItems, revenue, revenueItems, expenses, sales, salesItems, products, generalReceived, openingBalance, openingItems, marketingItems, withdrawals, cashAdjustments, inventoryAdjustments, start, end]
   );
 
+  const inventoryLeftAllTime = useMemo(() => {
+    const map = new Map<string, number>();
+    const add = (pid: string, qty: number) => map.set(pid, (map.get(pid) ?? 0) + qty);
+    openingItems.forEach((it) => add(it.product_id, Number(it.quantity)));
+    stockItems.forEach((it) => add(it.product_id, Number(it.quantity)));
+    inventoryAdjustments.forEach((it) => add(it.product_id, (it.type === "increase" ? 1 : -1) * Number(it.quantity)));
+    marketingItems.forEach((it) => add(it.product_id, -Number(it.quantity)));
+    if (settings?.sales_tracking_mode === "periodic") {
+      salesItems.forEach((it) => add(it.product_id, -Number(it.units_sold)));
+    } else {
+      revenueItems.forEach((it) => add(it.product_id, -Number(it.units_sold)));
+    }
+    return map;
+  }, [openingItems, stockItems, inventoryAdjustments, marketingItems, salesItems, revenueItems, settings]);
+
   const expensesByCategory = useMemo(() => {
     const inRange = (d: string) => (!start || d >= start) && (!end || d <= end);
     const map = new Map<string, number>();
