@@ -121,14 +121,15 @@ export default function TransactionsPage() {
   const exportToExcel = () => {
     const productById = new Map(products.map((p) => [p.id, (p.name ?? "").toLowerCase()]));
     // Group stock items by stock_purchase_id
-    const itemsByPurchase = new Map<string, { stickers: number; mavy: number; total: number }>();
+    const itemsByPurchase = new Map<string, { stickers: number; mavy: number; total: number; stickersCost: number; mavyCost: number }>();
     for (const it of stockItems) {
       const name = productById.get(it.product_id) ?? "";
-      const cur = itemsByPurchase.get(it.stock_purchase_id) ?? { stickers: 0, mavy: 0, total: 0 };
+      const cur = itemsByPurchase.get(it.stock_purchase_id) ?? { stickers: 0, mavy: 0, total: 0, stickersCost: 0, mavyCost: 0 };
       const qty = Number(it.quantity) || 0;
+      const cost = Number(it.total_cost) || 0;
       cur.total += qty;
-      if (name.includes("sticker")) cur.stickers += qty;
-      if (name.includes("mavy") || name.includes("tumbler")) cur.mavy += qty;
+      if (name.includes("sticker")) { cur.stickers += qty; cur.stickersCost += cost; }
+      if (name.includes("mavy") || name.includes("tumbler")) { cur.mavy += qty; cur.mavyCost += cost; }
       itemsByPurchase.set(it.stock_purchase_id, cur);
     }
     const data = sortedRows.map((t) => {
@@ -140,7 +141,9 @@ export default function TransactionsPage() {
         Category: t.category ?? "",
         "Quantity Purchased": agg ? agg.total : "",
         Stickers: agg ? agg.stickers : "",
+        "Cost Per Unit (Stickers)": agg && agg.stickers > 0 ? Number((agg.stickersCost / agg.stickers).toFixed(2)) : "",
         "Mavy Tumblers": agg ? agg.mavy : "",
+        "Cost Per Unit (Mavy Tumblers)": agg && agg.mavy > 0 ? Number((agg.mavyCost / agg.mavy).toFixed(2)) : "",
       };
     });
     const ws = XLSX.utils.json_to_sheet(data);
