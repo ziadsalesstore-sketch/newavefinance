@@ -150,6 +150,10 @@ export default function TransactionsPage() {
               </SelectContent>
             </Select>
           </div>
+          <Button variant="outline" onClick={exportToExcel}>
+            <Download className="h-4 w-4 mr-2" />
+            Export Excel
+          </Button>
         </div>
       </div>
       <Card className="overflow-hidden">
