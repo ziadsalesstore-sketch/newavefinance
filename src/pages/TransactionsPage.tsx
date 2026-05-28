@@ -11,7 +11,8 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Download } from "lucide-react";
+import * as XLSX from "xlsx";
 import { DateRangePicker, useDateRange, inDateRange } from "@/components/DateRangePicker";
 import { toast } from "sonner";
 
@@ -115,6 +116,19 @@ export default function TransactionsPage() {
   const editingCfg = editing ? sourceFor(editing) : null;
   const amountEditable = !editing || !editingCfg || editingCfg.amountCol !== null;
 
+  const exportToExcel = () => {
+    const data = sortedRows.map((t) => ({
+      Date: t.date,
+      Amount: Number(t.amount),
+      Category: t.category ?? "",
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Transactions");
+    XLSX.writeFile(wb, "transactions.xlsx");
+    toast.success("Exported to Excel");
+  };
+
   return (
     <div>
       <div className="mb-6 flex items-end justify-between gap-4 flex-wrap">
@@ -136,6 +150,10 @@ export default function TransactionsPage() {
               </SelectContent>
             </Select>
           </div>
+          <Button variant="outline" onClick={exportToExcel}>
+            <Download className="h-4 w-4 mr-2" />
+            Export Excel
+          </Button>
         </div>
       </div>
       <Card className="overflow-hidden">
