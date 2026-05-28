@@ -119,11 +119,30 @@ export default function TransactionsPage() {
   const amountEditable = !editing || !editingCfg || editingCfg.amountCol !== null;
 
   const exportToExcel = () => {
-    const data = sortedRows.map((t) => ({
-      Date: t.date,
-      Amount: Number(t.amount),
-      Category: t.category ?? "",
-    }));
+    const productById = new Map(products.map((p) => [p.id, (p.name ?? "").toLowerCase()]));
+    // Group stock items by stock_purchase_id
+    const itemsByPurchase = new Map<string, { stickers: number; mavy: number; total: number }>();
+    for (const it of stockItems) {
+      const name = productById.get(it.product_id) ?? "";
+      const cur = itemsByPurchase.get(it.stock_purchase_id) ?? { stickers: 0, mavy: 0, total: 0 };
+      const qty = Number(it.quantity) || 0;
+      cur.total += qty;
+      if (name.includes("sticker")) cur.stickers += qty;
+      if (name.includes("mavy") || name.includes("tumbler")) cur.mavy += qty;
+      itemsByPurchase.set(it.stock_purchase_id, cur);
+    }
+    const data = sortedRows.map((t) => {
+      const isStock = t.source_table === "stock_purchases" && t.source_id;
+      const agg = isStock ? itemsByPurchase.get(t.source_id!) : undefined;
+      return {
+        Date: t.date,
+        Amount: Number(t.amount),
+        Category: t.category ?? "",
+        "Quantity Purchased": agg ? agg.total : "",
+        Stickers: agg ? agg.stickers : "",
+        "Mavy Tumblers": agg ? agg.mavy : "",
+      };
+    });
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Transactions");
