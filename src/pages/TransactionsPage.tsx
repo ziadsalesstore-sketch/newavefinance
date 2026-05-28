@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useTransactions, fmt, type Transaction } from "@/hooks/useFinance";
+import { useTransactions, useStockPurchaseItems, useProducts, fmt, type Transaction } from "@/hooks/useFinance";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
