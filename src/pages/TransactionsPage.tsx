@@ -39,6 +39,8 @@ const INVALIDATE_KEYS = ["transactions", "stock", "stock_items", "revenue", "rev
 
 export default function TransactionsPage() {
   const { data: rows = [] } = useTransactions();
+  const { data: stockItems = [] } = useStockPurchaseItems();
+  const { data: products = [] } = useProducts();
   const qc = useQueryClient();
   const [sortBy, setSortBy] = useState<"date_desc" | "date_asc" | "amount_desc" | "amount_asc">("date_desc");
   const { range, setRange } = useDateRange();
