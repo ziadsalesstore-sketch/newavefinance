@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useTransactions, fmt, type Transaction } from "@/hooks/useFinance";
+import { useTransactions, useStockPurchaseItems, useProducts, fmt, type Transaction } from "@/hooks/useFinance";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +39,8 @@ const INVALIDATE_KEYS = ["transactions", "stock", "stock_items", "revenue", "rev
 
 export default function TransactionsPage() {
   const { data: rows = [] } = useTransactions();
+  const { data: stockItems = [] } = useStockPurchaseItems();
+  const { data: products = [] } = useProducts();
   const qc = useQueryClient();
   const [sortBy, setSortBy] = useState<"date_desc" | "date_asc" | "amount_desc" | "amount_asc">("date_desc");
   const { range, setRange } = useDateRange();
@@ -117,11 +119,30 @@ export default function TransactionsPage() {
   const amountEditable = !editing || !editingCfg || editingCfg.amountCol !== null;
 
   const exportToExcel = () => {
-    const data = sortedRows.map((t) => ({
-      Date: t.date,
-      Amount: Number(t.amount),
-      Category: t.category ?? "",
-    }));
+    const productById = new Map(products.map((p) => [p.id, (p.name ?? "").toLowerCase()]));
+    // Group stock items by stock_purchase_id
+    const itemsByPurchase = new Map<string, { stickers: number; mavy: number; total: number }>();
+    for (const it of stockItems) {
+      const name = productById.get(it.product_id) ?? "";
+      const cur = itemsByPurchase.get(it.stock_purchase_id) ?? { stickers: 0, mavy: 0, total: 0 };
+      const qty = Number(it.quantity) || 0;
+      cur.total += qty;
+      if (name.includes("sticker")) cur.stickers += qty;
+      if (name.includes("mavy") || name.includes("tumbler")) cur.mavy += qty;
+      itemsByPurchase.set(it.stock_purchase_id, cur);
+    }
+    const data = sortedRows.map((t) => {
+      const isStock = t.source_table === "stock_purchases" && t.source_id;
+      const agg = isStock ? itemsByPurchase.get(t.source_id!) : undefined;
+      return {
+        Date: t.date,
+        Amount: Number(t.amount),
+        Category: t.category ?? "",
+        "Quantity Purchased": agg ? agg.total : "",
+        Stickers: agg ? agg.stickers : "",
+        "Mavy Tumblers": agg ? agg.mavy : "",
+      };
+    });
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Transactions");
