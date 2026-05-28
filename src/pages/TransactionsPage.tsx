@@ -116,6 +116,19 @@ export default function TransactionsPage() {
   const editingCfg = editing ? sourceFor(editing) : null;
   const amountEditable = !editing || !editingCfg || editingCfg.amountCol !== null;
 
+  const exportToExcel = () => {
+    const data = sortedRows.map((t) => ({
+      Date: t.date,
+      Amount: Number(t.amount),
+      Category: t.category ?? "",
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Transactions");
+    XLSX.writeFile(wb, "transactions.xlsx");
+    toast.success("Exported to Excel");
+  };
+
   return (
     <div>
       <div className="mb-6 flex items-end justify-between gap-4 flex-wrap">
